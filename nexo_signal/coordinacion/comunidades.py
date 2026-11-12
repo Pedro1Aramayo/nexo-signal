@@ -7,14 +7,29 @@ import pandas as pd
 from . import grafo, senales
 
 
+def _louvain(red: nx.Graph) -> list[set]:
+    nodos = sorted(red.nodes)
+    indice = {nodo: posicion for posicion, nodo in enumerate(nodos)}
+    canonico = nx.Graph()
+    canonico.add_nodes_from(range(len(nodos)))
+    canonico.add_weighted_edges_from(sorted(
+        (min(indice[a], indice[b]), max(indice[a], indice[b]), datos.get("weight", 1))
+        for a, b, datos in red.edges(data=True)
+    ))
+    return [
+        {nodos[posicion] for posicion in comunidad}
+        for comunidad in nx.community.louvain_communities(
+            canonico, weight="weight", resolution=1, seed=0
+        )
+    ]
+
+
 def _candidatos(temporal: nx.Graph, respuestas: nx.Graph) -> list[dict]:
     candidatos = []
     if temporal.number_of_nodes():
         candidatos.extend(
             {"canal": "T", "cuentas": set(comunidad)}
-            for comunidad in nx.community.louvain_communities(
-                temporal, weight="weight", resolution=1, seed=0
-            )
+            for comunidad in _louvain(temporal)
             if len(comunidad) >= 4
         )
     if respuestas.number_of_edges():
@@ -22,9 +37,7 @@ def _candidatos(temporal: nx.Graph, respuestas: nx.Graph) -> list[dict]:
         if truss.number_of_nodes():
             candidatos.extend(
                 {"canal": "R", "cuentas": set(comunidad)}
-                for comunidad in nx.community.louvain_communities(
-                    truss, resolution=1, seed=0
-                )
+                for comunidad in _louvain(truss)
                 if len(comunidad) >= 4
             )
     return candidatos

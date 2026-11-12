@@ -83,3 +83,25 @@ def test_descarta_grupos_demasiado_pequenos_tras_resolver_solapamientos(monkeypa
     assert evidencia_recibida == {"G1": {"a", "b", "c", "d"}}
     assert evidencia["n_cuentas"].tolist() == [4]
     assert resumen["grupos"] == 1
+
+
+def test_louvain_no_depende_del_orden_de_insercion():
+    import random
+
+    import networkx as nx
+
+    from nexo_signal.coordinacion.comunidades import _louvain
+
+    aristas = [
+        (f"u{a:03d}", f"u{b:03d}", 1 + (a * b) % 3)
+        for a in range(40) for b in range(a + 1, 40)
+        if (a // 8 == b // 8) or (a * 7 + b) % 29 == 0
+    ]
+    resultados = set()
+    for semilla in range(5):
+        mezcla = aristas[:]
+        random.Random(semilla).shuffle(mezcla)
+        red = nx.Graph()
+        red.add_weighted_edges_from((b, a, w) if semilla % 2 else (a, b, w) for a, b, w in mezcla)
+        resultados.add(tuple(sorted(tuple(sorted(c)) for c in _louvain(red))))
+    assert len(resultados) == 1
