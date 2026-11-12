@@ -63,3 +63,23 @@ def test_leer_omite_malformadas_y_deduplica_antes_de_unir(tmp_path):
     assert len(narr) == 1
     assert evidencia is not None
     assert costo["segundos"] == 1.2
+
+    resultado = demo.render(df, narr, cue, evidencia, costo, "prueba")
+    salida = tmp_path / "demo.html"
+    salida.write_text(resultado, encoding="utf-8")
+    assert salida.exists()
+    assert "<b>2</b><span>comentarios analizados</span>" in resultado
+    assert "<td>0.50</td>" in resultado
+    assert "<td>12×</td>" in resultado
+    assert "<td>—</td>" in resultado
+    assert "<td>25%</td>" in resultado
+
+    for columna, valor in (
+        ("densidad", ""),
+        ("ratio", "NaN"),
+        ("frac_nocturna", "no-numérico"),
+    ):
+        evidencia_invalida = evidencia.copy()
+        evidencia_invalida[columna] = valor
+        html = demo.render(df, narr, cue, evidencia_invalida, costo, "prueba")
+        assert "—" in html

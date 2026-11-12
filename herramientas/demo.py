@@ -1,5 +1,6 @@
 """Genera una demo visual estática (HTML autocontenido) de NEXO SIGNAL a partir de una entrega."""
 import argparse, html, json
+import math
 from pathlib import Path
 import pandas as pd
 
@@ -69,6 +70,16 @@ def barra(apoya, rechaza):
             f'<small>{a:.0f}% apoya · {100 - a:.0f}% rechaza</small>')
 
 
+def _formatear_numero(valor, formato, escala=1):
+    try:
+        numero = float(valor)
+    except (TypeError, ValueError):
+        return "—"
+    if not math.isfinite(numero):
+        return "—"
+    return formato.format(numero * escala)
+
+
 def ejemplos(g, postura, k=2):
     sub = g[(g["postura"] == postura) & (g["respuesta_a"] == "")]
     sub = sub[sub["texto"].str.len().between(40, 220)]
@@ -131,9 +142,9 @@ def render(df, narr, cue, ev, costo, titulo_set):
             p = ", ".join(f"{k} {100 * v:.0f}%" for k, v in post.items())
             canal = {"T": "sincronía / texto repetido", "R": "red de respuestas"}.get(str(r.canal), str(r.canal))
             grupos_html += f"""
-<tr><td><b>{e(r.grupo)}</b></td><td>{r.n_cuentas}</td><td>{e(canal)}</td><td>{float(r.densidad):.2f}</td>
-<td>{float(r.ratio):,.0f}×</td><td>{float(r.mediana_dias_cuenta_al_primer_comentario):.0f} d</td>
-<td>{float(r.frac_nocturna) * 100:.0f}%</td><td>{len(g):,}</td><td>{objetivo}<br><small>{e(p)}</small></td>
+<tr><td><b>{e(r.grupo)}</b></td><td>{r.n_cuentas}</td><td>{e(canal)}</td><td>{_formatear_numero(r.densidad, '{:.2f}')}</td>
+<td>{_formatear_numero(r.ratio, '{:,.0f}×')}</td><td>{_formatear_numero(r.mediana_dias_cuenta_al_primer_comentario, '{:.0f} d')}</td>
+<td>{_formatear_numero(r.frac_nocturna, '{:.0f}%', 100)}</td><td>{len(g):,}</td><td>{objetivo}<br><small>{e(p)}</small></td>
 <td><i>{e(str(r.ejemplo_texto)[:120])}</i></td></tr>"""
     else:
         grupos_html = '<tr><td colspan="10">No se detectaron operaciones coordinadas.</td></tr>'
