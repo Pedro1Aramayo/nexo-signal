@@ -6,6 +6,9 @@ import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 
 
+RESOLUCION_LOUVAIN = 0.1
+
+
 def agrupar(comentarios: pd.DataFrame, vectores: dict[str, np.ndarray]) -> dict[str, int]:
     cores = list(dict.fromkeys(core for core in comentarios["core"] if core))
     if not cores:
@@ -40,7 +43,7 @@ def agrupar(comentarios: pd.DataFrame, vectores: dict[str, np.ndarray]) -> dict[
         grafo.add_edge(a, b, weight=peso + 0.5 * min(cuenta, 5))
 
     comunidades = nx.community.louvain_communities(
-        grafo, weight="weight", resolution=0.5, seed=0
+        grafo, weight="weight", resolution=RESOLUCION_LOUVAIN, seed=0
     )
     etiquetas = {
         nodo: grupo
