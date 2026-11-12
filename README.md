@@ -55,6 +55,18 @@ Hugging Face, usando la revisión fijada del modelo. `datos/final/` se descarga 
 `set-final` y no está incluido en el repositorio. La carpeta `entrega/` conserva en su raíz solo los
 cuatro archivos oficiales; las mediciones y demás evidencia se guardan en `entrega/evidencia/`.
 
+## Dashboard (Fase 3, en desarrollo)
+
+Requiere Node.js 20. La demo usa `datos/practica` y la salida de práctica generada con `make nexo`;
+no hay cuentas conectadas. Para preparar los datos y arrancar Vite:
+
+```bash
+make dashboard-datos && make dashboard
+```
+
+Luego abre [http://localhost:5173](http://localhost:5173). El plan de integraciones futuras está en
+[`docs/INTEGRACIONES.md`](docs/INTEGRACIONES.md).
+
 ## Qué existía antes del evento y qué hicimos nosotros
 
 Preexistente (repositorio oficial `qualydata-org/desafio-qualydata`, commit `e727d18`), sin modificar:

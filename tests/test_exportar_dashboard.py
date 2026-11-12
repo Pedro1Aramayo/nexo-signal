@@ -15,7 +15,11 @@ from herramientas.exportar_dashboard import categoria, exportar
         ("Qué vergüenza", "queja"),
         ("Nadie hace nada?", "queja"),
         ("¿Cuándo llega el agua?", "consulta"),
+        ("Hay que pedir turno por telefono o presencial?", "consulta"),
         ("Gracias, excelente noticia", "elogio"),
+        ("con el nuevo sistema online mejoró bastante", "elogio"),
+        ("Qué bronca, siempre igual", "queja"),
+        ("QUÉ DÍA EH", "otro"),
         ("", "otro"),
     ],
 )

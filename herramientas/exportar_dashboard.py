@@ -11,25 +11,27 @@ import pandas as pd
 
 PLATAFORMAS_DEMO = ("instagram", "facebook", "x", "youtube", "tiktok")
 CATEGORIAS = ("sugerencia", "queja", "consulta", "elogio", "otro")
+SUGERENCIA_FUERTE = (
+    "por que no", "deberian", "deberia", "habria que", "propongo", "sugiero",
+    "tendrian que", "estaria bueno",
+)
 SUGERENCIA = (
-    "deberian", "deberia", "habria que", "hay que", "propongo", "sugiero",
-    "ojala", "estaria bueno", "por que no", "pongan", "hagan", "controlen",
-    "arreglen", "que muestren", "tendrian que", "necesitamos",
+    "hay que", "hay q", "pongan", "hagan", "controlen", "arreglen",
+    "que muestren", "necesitamos", "ojala", "primero",
 )
 QUEJA = (
     "verguenza", "nadie", "siempre lo mismo", "robo", "roban", "chorros",
     "mentira", "mienten", "basta", "harto", "harta", "indignante",
     "desastre", "abandono", "no puede ser", "burla", "estafa", "otra vez",
     "como siempre", "nunca", "inutiles", "corruptos", "se llevaron", "peor",
-)
-INICIOS_CONSULTA = (
-    "que ", "como ", "cuando ", "donde ", "quien ", "cual ", "cuanto ",
-    "alguien sabe", "se sabe",
+    "bronca", "lamentable", "triste", "falta de respeto", "a pedazos",
+    "no hay", "tardan", "abandonados", "se muere",
 )
 ELOGIO = (
     "gracias", "excelente", "genial", "muy bien", "buenisimo",
     "felicitaciones", "bravo", "orgullo", "me encanta", "que lindo",
     "bien ahi", "aplausos", "buena noticia", "bien hecho", "por fin",
+    "mejoro", "avanza", "me atendieron", "buen trabajo",
 )
 PATRONES = {
     nombre: tuple(
@@ -37,6 +39,7 @@ PATRONES = {
         for frase in frases
     )
     for nombre, frases in (
+        ("sugerencia_fuerte", SUGERENCIA_FUERTE),
         ("sugerencia", SUGERENCIA),
         ("queja", QUEJA),
         ("elogio", ELOGIO),
@@ -64,16 +67,18 @@ def _sin_acentos(texto: str) -> str:
 
 def categoria(texto: str) -> str:
     normalizado = _sin_acentos(texto or "").strip()
+    if any(patron.search(normalizado) for patron in PATRONES["sugerencia_fuerte"]):
+        return "sugerencia"
+    if "?" in normalizado or "¿" in normalizado:
+        return (
+            "queja"
+            if any(patron.search(normalizado) for patron in PATRONES["queja"])
+            else "consulta"
+        )
     if any(patron.search(normalizado) for patron in PATRONES["sugerencia"]):
         return "sugerencia"
     if any(patron.search(normalizado) for patron in PATRONES["queja"]):
         return "queja"
-    if (
-        "?" in normalizado
-        or "¿" in normalizado
-        or normalizado.startswith(INICIOS_CONSULTA)
-    ):
-        return "consulta"
     if any(patron.search(normalizado) for patron in PATRONES["elogio"]):
         return "elogio"
     return "otro"
