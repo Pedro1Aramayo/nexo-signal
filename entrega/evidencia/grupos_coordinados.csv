@@ -1,0 +1,4 @@
+grupo,n_cuentas,canal,densidad,ratio,mediana_dias_cuenta_al_primer_comentario,mediana_seguidores,frac_nocturna,n_publicaciones,ejemplo_texto
+G1,52,T,0.4532,328.21,8.02,17.5,0.0083,99,el dique es agua para riego y para la ciudad si a la obra
+G2,21,R,0.549,48.3,1942.6,50.0,0.0164,151,exacto pan y circo
+G3,21,T,0.6238,6694.41,5.19,18.0,1.0,6,cierran la comisaria del barrio norte y nadie dice nada compartan

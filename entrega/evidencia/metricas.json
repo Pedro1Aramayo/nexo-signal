@@ -1,0 +1,121 @@
+{
+  "segundos_por_etapa": {
+    "ingesta": 1.246,
+    "normalizacion": 3.239,
+    "embeddings": 26.347,
+    "narrativas": 10.738,
+    "coordinacion": 17.985,
+    "coordinacion_pasos": {
+      "senales_ec": 2.603,
+      "senales_ed": 0.69,
+      "senales_er": 0.02,
+      "grafos": 2.872,
+      "comunidades_y_filtro": 11.634,
+      "expansion_y_evidencia": 0.035,
+      "total": 17.969
+    },
+    "escritura": 0.129
+  },
+  "segundos_total": 59.684,
+  "memoria_pico_mb": 2946.4,
+  "modelo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "revision_modelo": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
+  "ingesta": {
+    "filas_entrada": 150000,
+    "comentarios_rechazados": 0,
+    "comentarios_recuperados": 0,
+    "esquema_alternativo": []
+  },
+  "conteos": {
+    "comentarios": 150000,
+    "cuentas": 12002,
+    "cores_unicos_no_vacios": 10540,
+    "narrativas": 12,
+    "comentarios_ruido": 29236,
+    "grupos_coordinados": 3,
+    "cuentas_coordinadas": 94,
+    "clusters_louvain": 17
+  },
+  "orientacion_postura": {
+    "n04": {
+      "rate_lado_a": 0.051019,
+      "rate_lado_b": 0.050959,
+      "regla": "lexico"
+    },
+    "n07": {
+      "rate_lado_a": 0.049344,
+      "rate_lado_b": 0.286232,
+      "regla": "lexico"
+    },
+    "n09": {
+      "rate_lado_a": 0.046984,
+      "rate_lado_b": 0.053164,
+      "regla": "lexico"
+    },
+    "n03": {
+      "rate_lado_a": 0.192992,
+      "rate_lado_b": 0.233398,
+      "regla": "lexico"
+    },
+    "n05": {
+      "rate_lado_a": 0.042733,
+      "rate_lado_b": 0.053422,
+      "regla": "lexico"
+    },
+    "n08": {
+      "rate_lado_a": 0.042008,
+      "rate_lado_b": 0.038001,
+      "regla": "lexico"
+    },
+    "n12": {
+      "rate_lado_a": 0.1897,
+      "rate_lado_b": 0.293169,
+      "regla": "lexico"
+    },
+    "n01": {
+      "rate_lado_a": 0.068958,
+      "rate_lado_b": 0.477429,
+      "regla": "lexico"
+    },
+    "n06": {
+      "rate_lado_a": 0.048308,
+      "rate_lado_b": 0.257494,
+      "regla": "lexico"
+    },
+    "n02": {
+      "rate_lado_a": 0.243601,
+      "rate_lado_b": 0.282546,
+      "regla": "lexico"
+    },
+    "n10": {
+      "rate_lado_a": 0.047137,
+      "rate_lado_b": 0.47802,
+      "regla": "lexico"
+    },
+    "n11": {
+      "rate_lado_a": 0.29219,
+      "rate_lado_b": 0.733013,
+      "regla": "lexico"
+    }
+  },
+  "coordinacion": {
+    "senales": {
+      "ec": 863456,
+      "ed": 48618,
+      "er": 20548
+    },
+    "candidatos": 25,
+    "candidatos_aceptados": 3,
+    "cuentas_coordinadas": 94,
+    "grupos": 3,
+    "segundos_por_paso": {
+      "senales_ec": 2.603,
+      "senales_ed": 0.69,
+      "senales_er": 0.02,
+      "grafos": 2.872,
+      "comunidades_y_filtro": 11.634,
+      "expansion_y_evidencia": 0.035,
+      "total": 17.969
+    }
+  }
+}
