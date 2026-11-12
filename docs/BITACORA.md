@@ -112,3 +112,15 @@ Barrido de resolución de Louvain (B-cubed F1 del agrupamiento; misma configurac
 
 Confirmado: con 0.5 el resultado dependía del tamaño del dataset. Con 0.10 la precisión casi no cambia
 (0.96–0.99) y el recall queda estable entre 58k y 200k comentarios. Se adopta 0.10.
+
+### v4 (commits `f489e69`, `d2781ea`) — resolución 0.10 y origen por núcleo central
+
+- Con resolución 0.10, el grupo de L5 absorbe unos 1,8k comentarios de ruido con errores de tipeo, repartidos en
+  todo el período, y eso adelantaba el origen. Ahora el origen se calcula solo con el "núcleo central": los
+  comentarios cuyo `core` tiene similitud con el centroide del grupo ≥ la mediana ponderada.
+- Práctica: **51.65 / 55**.
+  - Narrativas 28.11: clustering F1 0.974, ruido 0.956, postura 0.990, origen 0.726 (L5 0.95, B4 1.0, H3 0.23).
+  - Coordinación 23.54.
+  - 50 s, 2.66 GB pico, 14 narrativas detectadas.
+- Por tema: colectivo **30.60**, hospital **38.34**, litio **51.35**. Antes eran 27.08 / 34.29 / 46.16.
+- Pendiente conocido: el origen de H3 (arranque chico de la campaña nocturna) se fecha tarde.
