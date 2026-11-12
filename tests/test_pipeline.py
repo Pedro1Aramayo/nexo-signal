@@ -4,7 +4,12 @@ import numpy as np
 import pandas as pd
 
 from nexo_signal import __main__ as pipeline
-from nexo_signal.ingesta.cargar import cargar
+from nexo_signal.ingesta.cargar import (
+    ORDEN_ENTRADA,
+    _leer_csv,
+    _recuperar_rechazos,
+    cargar,
+)
 from herramientas.validar_entrega import validar_entrega
 
 
@@ -155,3 +160,41 @@ def test_ingesta_esquema_alternativo_respeta_nombres_y_columnas_extra(tmp_path):
     assert tablas["comentarios"].attrs["ingesta"]["esquema_alternativo"] == [
         "comentarios"
     ]
+
+
+def test_ingesta_esquema_alternativo_recupera_id_por_encabezado(tmp_path):
+    comentarios = tmp_path / "comentarios.csv"
+    with comentarios.open("w", encoding="utf-8", newline="") as archivo:
+        archivo.write(
+            "texto,comentario_id,publicacion_id,cuenta_id,fecha,respuesta_a,me_gusta\n"
+        )
+        for i in range(21_000):
+            archivo.write(
+                f"Texto {i},c{i},p1,cuenta-1,2026-09-07T08:00:00-03:00,,0\n"
+            )
+        archivo.write(
+            "Texto malformado,id-real,p1,cuenta-1,2026-09-07T08:00:00-03:00,,0,extra\n"
+        )
+
+    datos, rechazos, encabezado, alternativo = _leer_csv(comentarios, "comentarios")
+    assert alternativo
+    assert encabezado.index("comentario_id") == 1
+    assert len(rechazos) == 1
+
+    comentarios_recuperados, cantidad = _recuperar_rechazos(
+        datos, rechazos, encabezado.index("comentario_id")
+    )
+    fila = comentarios_recuperados.loc[
+        comentarios_recuperados["comentario_id"].eq("id-real")
+    ].iloc[0]
+    assert cantidad == 1
+    assert fila["texto"] == ""
+
+    vacios = pd.DataFrame(
+        {"comentario_id": [""], ORDEN_ENTRADA: [1]}
+    )
+    sin_indice, cantidad_sin_indice = _recuperar_rechazos(
+        vacios, pd.DataFrame([{"line": 2, "csv_line": "texto,id-real"}]), None
+    )
+    assert cantidad_sin_indice == 0
+    assert not sin_indice["comentario_id"].eq("id-real").any()

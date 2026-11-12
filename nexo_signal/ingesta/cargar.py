@@ -34,8 +34,11 @@ def _leer_encabezado(ruta: Path) -> list[str]:
     return [nombre.strip().lstrip("\ufeff").strip() for nombre in encabezado]
 
 
-def _leer_csv(ruta: Path, tabla: str) -> tuple[pd.DataFrame, pd.DataFrame, bool]:
-    esquema_alternativo = _leer_encabezado(ruta) != list(COLUMNAS[tabla])
+def _leer_csv(
+    ruta: Path, tabla: str
+) -> tuple[pd.DataFrame, pd.DataFrame, list[str], bool]:
+    encabezado = _leer_encabezado(ruta)
+    esquema_alternativo = encabezado != list(COLUMNAS[tabla])
     columnas_sql = "{" + ", ".join(
         f"'{columna}':'VARCHAR'" for columna in COLUMNAS[tabla]
     ) + "}"
@@ -75,21 +78,26 @@ def _leer_csv(ruta: Path, tabla: str) -> tuple[pd.DataFrame, pd.DataFrame, bool]
             ).fetchdf()
         except duckdb.CatalogException:
             rechazos = pd.DataFrame(columns=["line", "csv_line"])
-        return datos, rechazos, esquema_alternativo
+        return datos, rechazos, encabezado, esquema_alternativo
     finally:
         conexion.close()
 
 
-def _primer_campo(fila_csv: str) -> str:
+def _campo(fila_csv: str, indice: int) -> str:
     try:
-        campo = next(csv.reader([fila_csv], strict=False))[0]
-    except (csv.Error, IndexError):
-        campo = fila_csv.split(",", 1)[0].strip().strip('"')
+        campos = next(csv.reader([fila_csv], strict=False))
+    except csv.Error:
+        campos = fila_csv.split(",")
+    if indice < 0 or indice >= len(campos):
+        return ""
+    campo = campos[indice]
     return campo.strip().lstrip("\ufeff")
 
 
 def _recuperar_rechazos(
-    comentarios: pd.DataFrame, rechazos: pd.DataFrame
+    comentarios: pd.DataFrame,
+    rechazos: pd.DataFrame,
+    indice_comentario_id: int | None,
 ) -> tuple[pd.DataFrame, int]:
     rechazos = rechazos.drop_duplicates("line", keep="first")
     posiciones = sorted(max(1, int(linea) - 1) for linea in rechazos["line"])
@@ -110,9 +118,9 @@ def _recuperar_rechazos(
     }
     recuperados = []
     for rechazo in rechazos.itertuples(index=False):
-        if pd.isna(rechazo.csv_line):
+        if indice_comentario_id is None or pd.isna(rechazo.csv_line):
             continue
-        comentario_id = _primer_campo(str(rechazo.csv_line))
+        comentario_id = _campo(str(rechazo.csv_line), indice_comentario_id)
         if not comentario_id or comentario_id in ids_existentes:
             continue
         fila = dict.fromkeys(COLUMNAS["comentarios"], "")
@@ -142,12 +150,19 @@ def cargar(datos: Path, cache: Path) -> dict[str, pd.DataFrame]:
             ruta = ruta.with_suffix(ruta.suffix + ".gz")
         if not ruta.exists():
             raise FileNotFoundError(f"No se encontró {datos / nombre} ni su versión gzip")
-        df, rechazos, esquema_alternativo = _leer_csv(ruta, tabla)
+        df, rechazos, encabezado, esquema_alternativo = _leer_csv(ruta, tabla)
         if esquema_alternativo:
             esquemas_alternativos.append(tabla)
         if tabla == "comentarios":
             filas_entrada = len(df) + rechazos["line"].nunique()
-            df, filas_recuperadas = _recuperar_rechazos(df, rechazos)
+            indice_comentario_id = (
+                encabezado.index("comentario_id")
+                if "comentario_id" in encabezado
+                else None
+            )
+            df, filas_recuperadas = _recuperar_rechazos(
+                df, rechazos, indice_comentario_id
+            )
             estadisticas_comentarios = {
                 "filas_entrada": int(filas_entrada),
                 "comentarios_rechazados": int(rechazos["line"].nunique()),
