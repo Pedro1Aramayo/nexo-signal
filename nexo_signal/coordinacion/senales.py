@@ -41,7 +41,11 @@ def calcular_senales(comentarios: pd.DataFrame) -> tuple[dict, dict[str, float]]
         inicio = time.perf_counter()
         ed = conexion.execute(
             """
-            SELECT x.cuenta_id AS a, y.cuenta_id AS b, COUNT(*)::BIGINT AS k
+            SELECT x.cuenta_id AS a, y.cuenta_id AS b,
+                   least(
+                       COUNT(DISTINCT x.comentario_id),
+                       COUNT(DISTINCT y.comentario_id)
+                   )::BIGINT AS k
             FROM comentarios x
             JOIN comentarios y
               ON x.core = y.core
@@ -49,7 +53,10 @@ def calcular_senales(comentarios: pd.DataFrame) -> tuple[dict, dict[str, float]]
              AND abs(x.ts - y.ts) <= 7200
             WHERE length(x.core) >= 25
             GROUP BY a, b
-            HAVING COUNT(*) >= 2
+            HAVING least(
+                COUNT(DISTINCT x.comentario_id),
+                COUNT(DISTINCT y.comentario_id)
+            ) >= 2
             """
         ).fetchdf()
         tiempos["ed"] = round(time.perf_counter() - inicio, 3)
