@@ -1,30 +1,25 @@
-import { useEffect, useState } from 'react'
+import { HashRouter, Route, Routes } from 'react-router-dom'
+import { Layout } from './ui'
+import Inicio from './pages/Inicio'
+import Detalle from './pages/Detalle'
+import Coordinacion from './pages/Coordinacion'
+import OrganicLens from './pages/OrganicLens'
+import Conexiones from './pages/Conexiones'
+import Narrativas from './pages/Narrativas'
 
-type Resumen = {
-  comentarios: number
-}
-
-function App() {
-  const [total, setTotal] = useState<number | null>(null)
-
-  useEffect(() => {
-    fetch('/data/resumen.json')
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('No se pudo cargar el resumen')
-        }
-        return response.json() as Promise<Resumen>
-      })
-      .then((resumen) => setTotal(resumen.comentarios))
-      .catch(() => setTotal(null))
-  }, [])
-
+export default function App() {
   return (
-    <main>
-      <h1>NEXO Dashboard</h1>
-      <p>Total de comentarios: {total ?? '—'}</p>
-    </main>
+    <HashRouter>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route index element={<Inicio />} />
+          <Route path="publicacion/:id" element={<Detalle />} />
+          <Route path="narrativas" element={<Narrativas />} />
+          <Route path="coordinacion" element={<Coordinacion />} />
+          <Route path="organic-lens" element={<OrganicLens />} />
+          <Route path="conexiones" element={<Conexiones />} />
+        </Route>
+      </Routes>
+    </HashRouter>
   )
 }
-
-export default App
