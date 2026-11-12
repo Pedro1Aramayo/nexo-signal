@@ -9,7 +9,7 @@ NEXO_OUT ?= salida/practica_nexo
 ENTREGA_OUT ?= entrega
 CACHE ?= .cache
 
-.PHONY: setup linea-base puntuar-linea-base nexo puntuar-nexo entrega descargar-final validar diagnostico test
+.PHONY: setup linea-base puntuar-linea-base nexo puntuar-nexo entrega descargar-final validar demo diagnostico test
 
 setup:
 	$(PYTHON) -m venv $(VENV)
@@ -39,6 +39,9 @@ descargar-final:
 
 validar:
 	$(PY) -m herramientas.validar_entrega --datos $(DATOS_FINAL) --entrega $(ENTREGA_OUT)
+
+demo:
+	$(PY) herramientas/demo.py --datos $(DATOS_FINAL) --entrega $(ENTREGA_OUT) --salida docs/demo/nexo_signal.html
 
 diagnostico:
 	$(PY) -m nexo_signal.reporte.diagnostico --datos $(DATOS) --entrega $(NEXO_OUT)
