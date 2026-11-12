@@ -63,3 +63,52 @@ Diagnóstico de v1:
   Se reemplaza por marcadores genéricos de refutación del español (en práctica, el lado que rechaza tiene más en 13/13).
 - Coordinación: 2 grupos falsos sostenidos solo por frases comunes compartidas **una vez**. Se exige repetición
   (≥2 coincidencias de texto por par), como ya se exigía en co-publicación.
+
+### v2 (commit `5ca74d4`) — correcciones de ruido, postura y coordinación
+
+| Métrica | Línea base | v1 | v2 |
+|---|---|---|---|
+| Agrupamiento B-cubed F1 | 0.339 | 0.694 | **0.956** (P 0.983 / R 0.931) |
+| Ruido F1 | 0.665 | 0.514 | **0.977** |
+| Postura macro-F1 | 0.491 | 0.383 | **0.990** |
+| Origen de emergentes | 0.333 | 0.333 | 0.667 (L5 0, B4 1, H3 1) |
+| Narrativas | 12.52 | 16.53 | **27.68 / 30** |
+| Cuentas coordinadas P / R / F1 | 1.00 / 0.30 / 0.47 | 0.41 / 0.92 / 0.57 | **0.97 / 0.92 / 0.95** (109 marcadas) |
+| Grupos B-cubed F1 | 0.169 | 0.930 | 0.930 |
+| Coordinación | 9.44 | 16.90 | **23.54 / 25** |
+| **Total** | **21.96** | **33.43** | **51.22 / 55** |
+
+51 s, 2.7 GB pico, USD 0. Dos corridas con salida idéntica byte a byte (md5).
+
+### v3 (commit `ed4c760`) — origen por cambio de régimen y piso de tamaño
+
+- Origen: primer instante cuya ventana de 6 h alcanza el 10% del pico del propio grupo (antes, unos pocos comentarios
+  sueltos adelantaban el origen de L5 seis días). Grupos con < 30 comentarios no cortos pasan a ruido.
+- Práctica: origen 0.771 (L5 1.0, B4 1.0, H3 0.31) → **51.69 / 55** (narrativas 28.15, coordinación 23.54). 57 s, 2.6 GB.
+- Costo de la regla: H3 (arranque chico de una campaña nocturna) ahora se fecha más tarde.
+
+### Prueba de generalización: un tema por vez (`herramientas/subconjuntos.py`)
+
+Cada tema de práctica como dataset independiente, sin reajustar nada:
+
+| Tema | Comentarios | Narrativas detectadas | Narrativas / Coordinación / Total |
+|---|---:|---:|---:|
+| colectivo (sin campañas) | 64.742 | 15 | 26.37 / 0.71 / 27.08 |
+| hospital | 58.020 | 22 | 21.82 / 12.47 / 34.29 |
+| litio | 77.238 | 24 | 23.80 / 22.36 / 46.16 |
+
+Hallazgo: con datasets más chicos el agrupamiento parte narrativas (recall 0.51–0.70). Hipótesis: la resolución de
+Louvain (modularidad) depende del tamaño del grafo. En estudio.
+
+Barrido de resolución de Louvain (B-cubed F1 del agrupamiento; misma configuración en todo lo demás):
+
+| Resolución | litio (77k) | hospital (58k) | práctica completa (200k) |
+|---|---|---|---|
+| 0.50 | 0.666 (24 grupos) | 0.709 (22) | 0.956 (19) |
+| 0.25 | 0.914 (11) | 0.957 (12) | 0.971 (15) |
+| 0.15 | 0.931 (8) | 0.990 (9) | 0.968 (15) |
+| 0.10 | **0.950** (7) | **0.990** (9) | **0.974** (14) |
+| 0.05 | 0.950 (7) | 0.995 (8) | — |
+
+Confirmado: con 0.5 el resultado dependía del tamaño del dataset. Con 0.10 la precisión casi no cambia
+(0.96–0.99) y el recall queda estable entre 58k y 200k comentarios. Se adopta 0.10.
