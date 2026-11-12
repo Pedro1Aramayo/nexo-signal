@@ -10,6 +10,7 @@ ARCHIVOS = {
     "comentarios": "comentarios.csv",
     "cuentas": "cuentas.csv",
 }
+ORDEN_ENTRADA = "__nexo_orden_entrada"
 
 
 def _leer_csv(ruta: Path) -> pd.DataFrame:
@@ -17,9 +18,9 @@ def _leer_csv(ruta: Path) -> pd.DataFrame:
     try:
         return conexion.execute(
             "SELECT * FROM read_csv_auto(?, header=true, all_varchar=true, "
-            "null_padding=true, ignore_errors=true)",
+            "null_padding=true, ignore_errors=true) WITH ORDINALITY",
             [str(ruta)],
-        ).fetchdf()
+        ).fetchdf().rename(columns={"ordinality": ORDEN_ENTRADA})
     finally:
         conexion.close()
 

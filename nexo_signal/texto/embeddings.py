@@ -9,16 +9,18 @@ from sentence_transformers import SentenceTransformer
 
 
 MODELO = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+REVISION = "e8f8c211226b894fcb81acc59f3b34ba3efd5f42"
 
 
 def clave(core: str) -> str:
-    return hashlib.sha1(f"{MODELO}\0{core}".encode("utf-8")).hexdigest()
+    return hashlib.sha1(f"{MODELO}@{REVISION}\0{core}".encode("utf-8")).hexdigest()
 
 
 def calcular_embeddings(cores: list[str], cache: Path) -> dict[str, np.ndarray]:
     unicos = list(dict.fromkeys(core for core in cores if core))
     if not unicos:
         return {}
+    torch.set_num_threads(min(8, os.cpu_count() or 1))
     cache.mkdir(parents=True, exist_ok=True)
     archivo = cache / "embeddings.parquet"
     existentes = {}
@@ -30,8 +32,7 @@ def calcular_embeddings(cores: list[str], cache: Path) -> dict[str, np.ndarray]:
         }
     faltantes = [core for core in unicos if clave(core) not in existentes]
     if faltantes:
-        torch.set_num_threads(max(1, os.cpu_count() or 1))
-        modelo = SentenceTransformer(MODELO, device="cpu")
+        modelo = SentenceTransformer(MODELO, revision=REVISION, device="cpu")
         vectores = modelo.encode(
             faltantes, batch_size=128, normalize_embeddings=True,
             convert_to_numpy=True, show_progress_bar=len(faltantes) > 512,

@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 
 from nexo_signal.coordinacion.comunidades import analizar_coordinacion
-from nexo_signal.ingesta.cargar import cargar
+from nexo_signal.ingesta.cargar import ORDEN_ENTRADA, cargar
 from nexo_signal.narrativas.agrupar import agrupar
 from nexo_signal.narrativas.describir import describir
 from nexo_signal.narrativas.postura import asignar_posturas
@@ -15,10 +15,26 @@ from nexo_signal.texto import embeddings
 from nexo_signal.texto.normalizar import normalizar_corpus
 
 
+def _preparar_evidencia(entrega: Path) -> Path:
+    evidencia = entrega / "evidencia"
+    evidencia.mkdir(parents=True, exist_ok=True)
+    for nombre in (
+        "metricas.json",
+        "grupos_coordinados.csv",
+        "medicion.json",
+        "puntaje.json",
+    ):
+        anterior = entrega / nombre
+        if anterior.is_file():
+            anterior.replace(evidencia / nombre)
+    return evidencia
+
+
 def ejecutar(datos: Path, entrega: Path, cache: Path) -> dict:
     inicio_total = time.perf_counter()
     etapas = {}
     entrega.mkdir(parents=True, exist_ok=True)
+    directorio_evidencia = _preparar_evidencia(entrega)
     cache_corrida = cache / datos.name
     cache_corrida.mkdir(parents=True, exist_ok=True)
 
@@ -45,18 +61,25 @@ def ejecutar(datos: Path, entrega: Path, cache: Path) -> dict:
     comentarios, _ = asignar(comentarios, clusters)
     comentarios, orientaciones_postura = asignar_posturas(comentarios, vectores)
     narrativas = describir(comentarios, vectores)
+    narrativas = narrativas.sort_values("narrativa", kind="stable").reset_index(drop=True)
     etapas["narrativas"] = round(time.perf_counter() - inicio, 3)
 
     inicio = time.perf_counter()
-    grupos, evidencia, coordinacion = analizar_coordinacion(comentarios, tablas["cuentas"])
-    evidencia.to_csv(entrega / "grupos_coordinados.csv", index=False)
-    cuentas = tablas["cuentas"][["cuenta_id"]].copy()
+    grupos, evidencia_grupos, coordinacion = analizar_coordinacion(
+        comentarios, tablas["cuentas"]
+    )
+    evidencia_grupos.to_csv(directorio_evidencia / "grupos_coordinados.csv", index=False)
+    cuentas = tablas["cuentas"][["cuenta_id"]].sort_values(
+        "cuenta_id", kind="stable"
+    ).reset_index(drop=True)
     cuentas["grupo"] = cuentas["cuenta_id"].map(grupos).fillna("")
     etapas["coordinacion"] = round(time.perf_counter() - inicio, 3)
     etapas["coordinacion_pasos"] = coordinacion["segundos_por_paso"]
 
     inicio = time.perf_counter()
-    comentarios[["comentario_id", "narrativa", "postura"]].to_csv(
+    comentarios.sort_values(ORDEN_ENTRADA, kind="stable")[
+        ["comentario_id", "narrativa", "postura"]
+    ].to_csv(
         entrega / "comentarios.csv", index=False
     )
     narrativas.to_csv(entrega / "narrativas.csv", index=False)
@@ -71,6 +94,8 @@ def ejecutar(datos: Path, entrega: Path, cache: Path) -> dict:
         "segundos_por_etapa": etapas,
         "segundos_total": round(time.perf_counter() - inicio_total, 3),
         "memoria_pico_mb": memoria_pico_mb(),
+        "modelo": embeddings.MODELO,
+        "revision_modelo": embeddings.REVISION,
         "conteos": {
             "comentarios": int(len(comentarios)),
             "cuentas": int(len(cuentas)),
@@ -84,7 +109,7 @@ def ejecutar(datos: Path, entrega: Path, cache: Path) -> dict:
         "orientacion_postura": orientaciones_postura,
         "coordinacion": coordinacion,
     }
-    (entrega / "metricas.json").write_text(
+    (directorio_evidencia / "metricas.json").write_text(
         json.dumps(metricas, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     print(

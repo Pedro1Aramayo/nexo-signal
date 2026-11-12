@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from nexo_signal import __main__ as pipeline
+from herramientas.validar_entrega import validar_entrega
 
 
 def _guardar_gzip(df, ruta):
@@ -69,16 +70,26 @@ def test_pipeline_con_datos_sucios(tmp_path, monkeypatch):
     monkeypatch.setattr(pipeline.embeddings, "calcular_embeddings", fake_embeddings)
     metricas = pipeline.ejecutar(datos, entrega, cache)
 
-    for nombre in (
-        "comentarios.csv", "narrativas.csv", "cuentas.csv", "costo.json", "metricas.json"
-    ):
+    assert {p.name for p in entrega.iterdir() if p.is_file()} == {
+        "comentarios.csv", "narrativas.csv", "cuentas.csv", "costo.json"
+    }
+    assert (entrega / "evidencia" / "metricas.json").exists()
+    for nombre in ("comentarios.csv", "narrativas.csv", "cuentas.csv", "costo.json"):
         assert (entrega / nombre).exists()
     comentarios = pd.read_csv(entrega / "comentarios.csv", dtype=str, keep_default_na=False)
-    assert {"comentario_id", "narrativa", "postura"} <= set(comentarios.columns)
+    assert list(comentarios.columns) == ["comentario_id", "narrativa", "postura"]
     assert len(comentarios) == 300
+    assert comentarios["comentario_id"].tolist() == [f"c{i}" for i in range(300)]
     assert comentarios.loc[comentarios["comentario_id"].eq("c4"), "narrativa"].iloc[0] == ""
     cuentas = pd.read_csv(entrega / "cuentas.csv", dtype=str, keep_default_na=False)
     assert len(cuentas) == 11
+    assert cuentas["cuenta_id"].tolist() == sorted(cuentas["cuenta_id"])
+    narrativas = pd.read_csv(entrega / "narrativas.csv", dtype=str, keep_default_na=False)
+    assert narrativas["narrativa"].tolist() == sorted(narrativas["narrativa"])
     limpios = pd.read_parquet(cache / "datos" / "comentarios.parquet")
     assert limpios.loc[limpios["comentario_id"].eq("c5"), "respuesta_a"].iloc[0] == ""
     assert metricas["conteos"]["comentarios"] == 300
+    assert metricas["modelo"] == pipeline.embeddings.MODELO
+    assert metricas["revision_modelo"] == pipeline.embeddings.REVISION
+    resumen = validar_entrega(datos, entrega)
+    assert resumen == {"filas_entrada": 303, "ids_unicos": 300, "filas_salida": 300}

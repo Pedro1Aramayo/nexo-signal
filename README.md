@@ -25,12 +25,14 @@ python -m nexo_signal --datos datos/practica --entrega salida/practica_nexo
 make nexo                # corre el pipeline y registra la medición de tiempo/memoria
 make puntuar-nexo        # puntúa salida/practica_nexo con la verdad del set de práctica
 make diagnostico         # informa pureza, postura y confusión de ruido por cluster
-make entrega DATOS=datos/final  # escribe la entrega final en entrega/
+make entrega             # procesa datos/final y escribe la entrega final
+make validar             # valida el formato de entrega contra datos/final
 ```
 
 El comando directo es la forma de ejecución de una sola etapa. El pipeline guarda tablas limpias e
-intermedias en `.cache/`, usa DuckDB + Parquet local y genera los cuatro archivos de entrega junto con
-`metricas.json`. El modelo semántico corre localmente en CPU; no hay llamadas a servicios de IA.
+intermedias en `.cache/`, usa DuckDB + Parquet local y deja exactamente los cuatro archivos oficiales
+en la raíz de salida; las métricas, mediciones y evidencia de coordinación quedan en `evidencia/`.
+El modelo semántico corre localmente en CPU; no hay llamadas a servicios de IA.
 
 Para puntuar otro directorio de salida, use `make puntuar-nexo NEXO_OUT=...`. La línea base sigue disponible:
 
@@ -38,6 +40,18 @@ Para puntuar otro directorio de salida, use `make puntuar-nexo NEXO_OUT=...`. La
 make linea-base
 make puntuar-linea-base
 ```
+
+## Reproducir la entrega
+
+```bash
+make setup && make descargar-final && make entrega && make validar
+```
+
+La ejecución de práctica tomó aproximadamente 3 minutos para 200.000 comentarios en una máquina
+CPU de 8 núcleos y unos 31 GB de RAM, sin GPU. La primera ejecución descarga cerca de 470 MB desde
+Hugging Face, usando la revisión fijada del modelo. `datos/final/` se descarga desde el release
+`set-final` y no está incluido en el repositorio. La carpeta `entrega/` conserva en su raíz solo los
+cuatro archivos oficiales; las mediciones y demás evidencia se guardan en `entrega/evidencia/`.
 
 ## Qué existía antes del evento y qué hicimos nosotros
 
