@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from nexo_signal.narrativas.origen import fechas_origen
@@ -18,12 +19,44 @@ def test_origen_usa_ventana_seis_horas_semicerrada():
         {
             "narrativa": ["n01"] * len(tiempos),
             "respuesta_corta": [False] * len(tiempos),
+            "core": ["core"] * len(tiempos),
             "fecha_dt": tiempos,
         }
     )
 
-    assert fechas_origen(comentarios)["n01"] == (
+    assert fechas_origen(comentarios, {"core": np.array([1.0, 0.0])})["n01"] == (
         "2026-09-07T13:00:00-03:00"
+    )
+
+
+def test_origen_descarta_fringe_ortogonal_al_nucleo():
+    inicio = pd.Timestamp("2026-09-07T08:00:00-03:00")
+    filas = [
+        {
+            "narrativa": "n01",
+            "respuesta_corta": False,
+            "core": f"fringe-{i}",
+            "fecha_dt": inicio + pd.Timedelta(hours=i),
+        }
+        for i in range(3)
+    ]
+    inicio_central = inicio + pd.Timedelta(days=7)
+    filas.extend(
+        {
+            "narrativa": "n01",
+            "respuesta_corta": False,
+            "core": "central",
+            "fecha_dt": inicio_central + pd.Timedelta(minutes=15 * i),
+        }
+        for i in range(6)
+    )
+    vectores = {
+        **{f"fringe-{i}": np.array([0.0, 1.0]) for i in range(3)},
+        "central": np.array([1.0, 0.0]),
+    }
+
+    assert fechas_origen(pd.DataFrame(filas), vectores)["n01"] == (
+        "2026-09-14T08:00:00-03:00"
     )
 
 
@@ -69,6 +102,6 @@ def test_narrativa_emitida_tiene_fecha_origen():
     ]
 
     resultado, _ = asignar(pd.DataFrame(filas), {"core repetido": 0})
-    origen = fechas_origen(resultado)
+    origen = fechas_origen(resultado, {"core repetido": np.array([1.0, 0.0])})
     assert resultado["narrativa"].ne("").any()
     assert all(origen[etiqueta] for etiqueta in resultado["narrativa"].unique() if etiqueta)

@@ -44,7 +44,7 @@ def ejecutar(datos: Path, entrega: Path, cache: Path) -> dict:
     clusters = agrupar(comentarios, vectores)
     comentarios, _ = asignar(comentarios, clusters)
     comentarios, orientaciones_postura = asignar_posturas(comentarios, vectores)
-    narrativas = describir(comentarios)
+    narrativas = describir(comentarios, vectores)
     etapas["narrativas"] = round(time.perf_counter() - inicio, 3)
 
     inicio = time.perf_counter()

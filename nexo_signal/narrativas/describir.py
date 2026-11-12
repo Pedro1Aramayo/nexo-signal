@@ -5,7 +5,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from .origen import fechas_origen
 
 
-def describir(comentarios: pd.DataFrame) -> pd.DataFrame:
+def describir(
+    comentarios: pd.DataFrame, vectores: dict[str, np.ndarray]
+) -> pd.DataFrame:
     grupos = list(dict.fromkeys(comentarios.loc[comentarios["narrativa"].ne(""), "narrativa"]))
     if not grupos:
         return pd.DataFrame(columns=["narrativa", "titulo", "frases_clave", "fecha_origen"])
@@ -30,7 +32,7 @@ def describir(comentarios: pd.DataFrame) -> pd.DataFrame:
         except ValueError:
             pass
 
-    origenes = fechas_origen(comentarios)
+    origenes = fechas_origen(comentarios, vectores)
     filas = []
     for narrativa in grupos:
         grupo = largos[largos["narrativa"].eq(narrativa)]
