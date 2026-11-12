@@ -9,7 +9,13 @@ PALETA = ["#2563eb", "#dc2626", "#16a34a", "#9333ea", "#ea580c", "#0891b2", "#be
 
 def leer(datos: Path, entrega: Path):
     def csv(p):
-        return pd.read_csv(p, dtype=str, keep_default_na=False)
+        return pd.read_csv(
+            p,
+            engine="c",
+            dtype=str,
+            keep_default_na=False,
+            on_bad_lines="skip",
+        )
     def buscar(nombre):
         for base in (datos, entrega):
             for suf in ("", ".gz"):
@@ -17,10 +23,12 @@ def leer(datos: Path, entrega: Path):
                 if p.exists():
                     return p
         raise FileNotFoundError(nombre)
-    com = csv(buscar("comentarios.csv"))
+    com = csv(buscar("comentarios.csv")).drop_duplicates(
+        "comentario_id", keep="first"
+    )
     pred = csv(entrega / "comentarios.csv")
     narr = csv(entrega / "narrativas.csv")
-    cue = csv(entrega / "cuentas.csv")
+    cue = csv(entrega / "cuentas.csv").drop_duplicates("cuenta_id", keep="first")
     ev = None
     for p in (entrega / "evidencia" / "grupos_coordinados.csv", entrega / "grupos_coordinados.csv"):
         if p.exists():
