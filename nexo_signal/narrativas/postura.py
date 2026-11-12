@@ -11,6 +11,11 @@ DESACUERDOS = (
     "mentira", "falso", "nada que ver", "no es asi", "cualquiera",
     "verso", "fake", "para nada", "no",
 )
+REFUTACION = re.compile(
+    r"\b(falso|mentira|mentiras|prueba|pruebas|informarse|informate|informense|"
+    r"nadie|chequea\w*|fuente|fuentes|dato|datos|realidad|cierto|verso|invento|"
+    r"fake|desinformacion|pero|no es|dejen de|chamuyo|operacion|exagera\w*)\b"
+)
 
 
 def _contradice(texto: str) -> bool:
@@ -69,7 +74,7 @@ def _vector_firmado(
 
 def asignar_posturas(
     comentarios: pd.DataFrame, vectores: dict[str, np.ndarray]
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, dict[str, dict]]:
     df = comentarios.copy()
     df["postura"] = ""
     por_id = df.set_index("comentario_id")["core"].to_dict()
@@ -83,7 +88,7 @@ def asignar_posturas(
                 tabla[clave] = tabla.get(clave, 0) + 1
 
     lados_por_core = {}
-    orientacion = {}
+    orientaciones = {}
     grupo_largos = df[df["narrativa"].ne("") & ~df["respuesta_corta"]]
     for narrativa, grupo in grupo_largos.groupby("narrativa", sort=False):
         cores = list(dict.fromkeys(core for core in grupo["core"] if core))
@@ -91,21 +96,43 @@ def asignar_posturas(
             continue
         lados = _vector_firmado(cores, vectores, respuestas.get(narrativa, {}))
         indices = dict(zip(cores, lados))
-        tiempos = {}
+        tasas = {}
         for lado in (-1, 1):
-            valores = grupo.loc[
-                grupo["core"].map(indices).eq(lado), "fecha_dt"
-            ].dropna()
-            if len(valores):
-                tiempos[lado] = valores.astype("int64").to_numpy()
-        if len(tiempos) == 2:
-            cuantiles = {lado: np.quantile(valores, 0.02) for lado, valores in tiempos.items()}
-            lado_apoya = min(cuantiles, key=lambda lado: (cuantiles[lado], -lado))
+            filas_lado = grupo[grupo["core"].map(indices).eq(lado)]
+            hits = int(filas_lado["normalizado"].map(
+                lambda texto: bool(REFUTACION.search(texto))
+            ).sum())
+            tasas[lado] = (hits + 1) / (len(filas_lado) + 2)
+        if tasas[-1] > tasas[1]:
+            lado_rechaza = -1
+            regla = "lexico"
+        elif tasas[1] > tasas[-1]:
+            lado_rechaza = 1
+            regla = "lexico"
         else:
-            lado_apoya = next(iter(tiempos), 1)
-        orientacion[narrativa] = lado_apoya
+            tiempos = {}
+            for lado in (-1, 1):
+                valores = grupo.loc[
+                    grupo["core"].map(indices).eq(lado), "fecha_dt"
+                ].dropna()
+                if len(valores):
+                    tiempos[lado] = valores.astype("int64").to_numpy()
+            if len(tiempos) == 2:
+                cuantiles = {
+                    lado: np.quantile(valores, 0.02) for lado, valores in tiempos.items()
+                }
+                lado_apoya = min(cuantiles, key=lambda lado: (cuantiles[lado], -lado))
+            else:
+                lado_apoya = next(iter(tiempos), 1)
+            lado_rechaza = -lado_apoya
+            regla = "tiempo"
+        orientaciones[narrativa] = {
+            "rate_lado_a": round(float(tasas[-1]), 6),
+            "rate_lado_b": round(float(tasas[1]), 6),
+            "regla": regla,
+        }
         lados_por_core.update({
-            (narrativa, core): "apoya" if lado == lado_apoya else "rechaza"
+            (narrativa, core): "rechaza" if lado == lado_rechaza else "apoya"
             for core, lado in indices.items()
         })
 
@@ -142,4 +169,4 @@ def asignar_posturas(
         if fila.respuesta_corta:
             heredar(i)
     df["postura"] = posturas
-    return df
+    return df, orientaciones

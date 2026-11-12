@@ -31,11 +31,6 @@ def asignar(comentarios: pd.DataFrame, clusters: dict[str, int]) -> tuple[pd.Dat
         for cluster, fila in actividad.iterrows()
         if int(fila["n"]) >= 30 and fila["k"] / fila["n"] < 0.25 * p0
     }
-    clusters_ruido = {
-        int(cluster) for cluster in df.loc[df["core"].isin(ruido_cores), "cluster_id"]
-        if cluster >= 0
-    }
-    ruido_clusters |= clusters_ruido
 
     df["narrativa"] = ""
     asignados = (

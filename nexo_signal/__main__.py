@@ -43,7 +43,7 @@ def ejecutar(datos: Path, entrega: Path, cache: Path) -> dict:
     inicio = time.perf_counter()
     clusters = agrupar(comentarios, vectores)
     comentarios, _ = asignar(comentarios, clusters)
-    comentarios = asignar_posturas(comentarios, vectores)
+    comentarios, orientaciones_postura = asignar_posturas(comentarios, vectores)
     narrativas = describir(comentarios)
     etapas["narrativas"] = round(time.perf_counter() - inicio, 3)
 
@@ -81,6 +81,7 @@ def ejecutar(datos: Path, entrega: Path, cache: Path) -> dict:
             "cuentas_coordinadas": int(len(grupos)),
             "clusters_louvain": int(len(set(clusters.values()))),
         },
+        "orientacion_postura": orientaciones_postura,
         "coordinacion": coordinacion,
     }
     (entrega / "metricas.json").write_text(

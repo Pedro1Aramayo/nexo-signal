@@ -49,6 +49,7 @@ def calcular_senales(comentarios: pd.DataFrame) -> tuple[dict, dict[str, float]]
              AND abs(x.ts - y.ts) <= 7200
             WHERE length(x.core) >= 25
             GROUP BY a, b
+            HAVING COUNT(*) >= 2
             """
         ).fetchdf()
         tiempos["ed"] = round(time.perf_counter() - inicio, 3)
