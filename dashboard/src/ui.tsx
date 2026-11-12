@@ -108,7 +108,7 @@ export function Layout() {
   return (
     <div className="min-h-screen bg-[#f4f6fb] text-slate-900 lg:flex">
       <aside className="sticky top-0 z-20 flex items-center gap-2 bg-gradient-to-b from-[#0d1b4c] via-[#13246b] to-[#1b2f86] px-4 py-3 text-white lg:h-screen lg:w-64 lg:flex-col lg:items-stretch lg:gap-2 lg:px-4 lg:py-7">
-        <div className="mr-auto flex items-center gap-3 lg:mb-8 lg:mr-0 lg:px-2">
+        <div className="mr-auto flex shrink-0 items-center gap-3 lg:mb-8 lg:mr-0 lg:px-2">
           <svg viewBox="0 0 40 40" className="h-10 w-10 lg:h-12 lg:w-12">
             <defs>
               <linearGradient id="gn" x1="0" y1="1" x2="1" y2="0">
@@ -118,9 +118,9 @@ export function Layout() {
             </defs>
             <path d="M5 34V8l6-2 18 20V6h6v28l-6 2L11 16v18z" fill="url(#gn)" />
           </svg>
-          <div className="text-xl font-extrabold leading-[1.05] tracking-wide lg:text-2xl">NEXO<br />SIGNAL</div>
+          <div className="hidden text-xl font-extrabold leading-[1.05] tracking-wide sm:block lg:text-2xl">NEXO<br />SIGNAL</div>
         </div>
-        <nav className="flex gap-1 lg:flex-col lg:gap-2">
+        <nav className="flex min-w-0 gap-1 overflow-x-auto lg:flex-col lg:gap-2 lg:overflow-visible">
           {MENU.map(({ a, icono: Icono, texto }) => (
             <NavLink
               key={a}

@@ -18,9 +18,9 @@ export default function Conexiones() {
       </Tarjeta>
       <div className="grid gap-4 md:grid-cols-2">
         {ORDEN_PLATAFORMAS.map((p) => (
-          <Tarjeta key={p} className="flex items-center gap-4 p-5">
+          <Tarjeta key={p} className="flex flex-wrap items-center gap-4 p-5">
             <MarcaPlataforma p={p} size="h-14 w-14" />
-            <div className="min-w-0 flex-1">
+            <div className="min-w-[10rem] flex-1">
               <div className="text-xl font-semibold">{PLATAFORMAS[p].nombre}</div>
               <div className="text-slate-500">{API[p]}</div>
             </div>
