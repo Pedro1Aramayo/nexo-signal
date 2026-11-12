@@ -1,4 +1,5 @@
 import csv
+import gzip
 from pathlib import Path
 
 import duckdb
@@ -26,24 +27,55 @@ COLUMNAS = {
 }
 
 
-def _leer_csv(ruta: Path, tabla: str) -> tuple[pd.DataFrame, pd.DataFrame]:
+def _leer_encabezado(ruta: Path) -> list[str]:
+    abrir = gzip.open if ruta.suffix == ".gz" else open
+    with abrir(ruta, "rt", encoding="utf-8-sig", newline="") as archivo:
+        encabezado = next(csv.reader(archivo), [])
+    return [nombre.strip().lstrip("\ufeff").strip() for nombre in encabezado]
+
+
+def _leer_csv(ruta: Path, tabla: str) -> tuple[pd.DataFrame, pd.DataFrame, bool]:
+    esquema_alternativo = _leer_encabezado(ruta) != list(COLUMNAS[tabla])
     columnas_sql = "{" + ", ".join(
         f"'{columna}':'VARCHAR'" for columna in COLUMNAS[tabla]
     ) + "}"
     conexion = duckdb.connect()
     try:
-        datos = conexion.execute(
-            "SELECT * FROM read_csv(?, auto_detect=false, header=true, delim=',', "
-            "quote='\"', escape='\"', all_varchar=true, null_padding=true, "
-            "ignore_errors=true, store_rejects=true, strict_mode=true, "
-            "rejects_table='nexo_rechazos', rejects_scan='nexo_escaneos', "
-            f"columns={columnas_sql}) WITH ORDINALITY",
-            [str(ruta)],
-        ).fetchdf().rename(columns={"ordinality": ORDEN_ENTRADA})
-        rechazos = conexion.execute(
-            "SELECT line, csv_line FROM nexo_rechazos ORDER BY line"
-        ).fetchdf()
-        return datos, rechazos
+        if esquema_alternativo:
+            datos = conexion.execute(
+                "SELECT * FROM read_csv_auto(?, header=true, all_varchar=true, "
+                "null_padding=true, ignore_errors=true, store_rejects=true, "
+                "strict_mode=true, rejects_table='nexo_rechazos', "
+                "rejects_scan='nexo_escaneos') WITH ORDINALITY",
+                [str(ruta)],
+            ).fetchdf()
+            columnas = [
+                columna
+                if columna == "ordinality"
+                else str(columna).strip().lstrip("\ufeff").strip()
+                for columna in datos.columns
+            ]
+            datos.columns = columnas
+            datos = datos.rename(columns={"ordinality": ORDEN_ENTRADA})
+            for columna in COLUMNAS[tabla]:
+                if columna not in datos:
+                    datos[columna] = ""
+        else:
+            datos = conexion.execute(
+                "SELECT * FROM read_csv(?, auto_detect=false, header=true, delim=',', "
+                "quote='\"', escape='\"', all_varchar=true, null_padding=true, "
+                "ignore_errors=true, store_rejects=true, strict_mode=true, "
+                "rejects_table='nexo_rechazos', rejects_scan='nexo_escaneos', "
+                f"columns={columnas_sql}) WITH ORDINALITY",
+                [str(ruta)],
+            ).fetchdf().rename(columns={"ordinality": ORDEN_ENTRADA})
+        try:
+            rechazos = conexion.execute(
+                "SELECT line, csv_line FROM nexo_rechazos ORDER BY line"
+            ).fetchdf()
+        except duckdb.CatalogException:
+            rechazos = pd.DataFrame(columns=["line", "csv_line"])
+        return datos, rechazos, esquema_alternativo
     finally:
         conexion.close()
 
@@ -103,13 +135,16 @@ def cargar(datos: Path, cache: Path) -> dict[str, pd.DataFrame]:
     """Carga, limpia y guarda las cuatro tablas en Parquet."""
     tablas = {}
     estadisticas_comentarios = {}
+    esquemas_alternativos = []
     for tabla, nombre in ARCHIVOS.items():
         ruta = datos / nombre
         if not ruta.exists() and ruta.with_suffix(ruta.suffix + ".gz").exists():
             ruta = ruta.with_suffix(ruta.suffix + ".gz")
         if not ruta.exists():
             raise FileNotFoundError(f"No se encontró {datos / nombre} ni su versión gzip")
-        df, rechazos = _leer_csv(ruta, tabla)
+        df, rechazos, esquema_alternativo = _leer_csv(ruta, tabla)
+        if esquema_alternativo:
+            esquemas_alternativos.append(tabla)
         if tabla == "comentarios":
             filas_entrada = len(df) + rechazos["line"].nunique()
             df, filas_recuperadas = _recuperar_rechazos(df, rechazos)
@@ -117,6 +152,7 @@ def cargar(datos: Path, cache: Path) -> dict[str, pd.DataFrame]:
                 "filas_entrada": int(filas_entrada),
                 "comentarios_rechazados": int(rechazos["line"].nunique()),
                 "comentarios_recuperados": int(filas_recuperadas),
+                "esquema_alternativo": esquemas_alternativos,
             }
         for columna in df.columns:
             df[columna] = df[columna].map(

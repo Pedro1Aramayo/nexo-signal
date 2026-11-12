@@ -1,7 +1,10 @@
+import gzip
+
 import numpy as np
 import pandas as pd
 
 from nexo_signal import __main__ as pipeline
+from nexo_signal.ingesta.cargar import cargar
 from herramientas.validar_entrega import validar_entrega
 
 
@@ -109,9 +112,46 @@ def test_pipeline_con_datos_sucios(tmp_path, monkeypatch):
         "filas_entrada": 304,
         "comentarios_rechazados": 1,
         "comentarios_recuperados": 1,
+        "esquema_alternativo": [],
     }
     assert limpios.loc[
         limpios["comentario_id"].eq("malformado"), "texto"
     ].iloc[0] == ""
     resumen = validar_entrega(datos, entrega)
     assert resumen == {"filas_entrada": 304, "ids_unicos": 301, "filas_salida": 301}
+
+
+def test_ingesta_esquema_alternativo_respeta_nombres_y_columnas_extra(tmp_path):
+    datos = tmp_path / "datos"
+    datos.mkdir()
+    cache = tmp_path / "cache"
+    comentarios = datos / "comentarios.csv.gz"
+    with gzip.open(comentarios, "wt", encoding="utf-8", newline="") as archivo:
+        archivo.write(
+            "\ufeff texto ,cuenta_id,comentario_id,publicacion_id,fecha,respuesta_a,extra\n"
+            "Texto correcto,cuenta-1,c1,p1,2026-09-07T08:00:00-03:00,,valor-extra\n"
+        )
+    pd.DataFrame(
+        [{"publicacion_id": "p1", "fuente_id": "f1", "fecha": "2026-09-07", "titular": "t"}]
+    ).to_csv(datos / "publicaciones.csv", index=False)
+    pd.DataFrame(
+        [{"fuente_id": "f1", "nombre": "Fuente", "tipo": "medio"}]
+    ).to_csv(datos / "fuentes.csv", index=False)
+    pd.DataFrame(
+        [{
+            "cuenta_id": "cuenta-1", "usuario": "u", "fecha_creacion": "",
+            "seguidores": "0", "siguiendo": "0",
+        }]
+    ).to_csv(datos / "cuentas.csv", index=False)
+
+    tablas = cargar(datos, cache)
+
+    fila = tablas["comentarios"].iloc[0]
+    assert fila["comentario_id"] == "c1"
+    assert fila["cuenta_id"] == "cuenta-1"
+    assert fila["texto"] == "Texto correcto"
+    assert fila["me_gusta"] == ""
+    assert pd.read_parquet(cache / "comentarios.parquet").loc[0, "extra"] == "valor-extra"
+    assert tablas["comentarios"].attrs["ingesta"]["esquema_alternativo"] == [
+        "comentarios"
+    ]
