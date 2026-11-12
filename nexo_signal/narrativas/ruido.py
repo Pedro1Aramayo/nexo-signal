@@ -23,10 +23,17 @@ def asignar(comentarios: pd.DataFrame, clusters: dict[str, int]) -> tuple[pd.Dat
         if n * p0 >= 5 and binom.cdf(k, n, p0) < 1e-3:
             ruido_cores.add(core)
 
+    tamanos_cluster = evaluables[evaluables["cluster_id"].ge(0)].groupby("cluster_id").size()
+    cluster_ids = set(df.loc[df["cluster_id"].ge(0), "cluster_id"])
+    ruido_clusters = {
+        int(cluster)
+        for cluster in cluster_ids
+        if int(tamanos_cluster.get(cluster, 0)) < 30
+    }
     actividad = evaluables[
         evaluables["cluster_id"].ge(0) & ~evaluables["core"].isin(ruido_cores)
     ].groupby("cluster_id")["engaged"].agg(n="size", k="sum")
-    ruido_clusters = {
+    ruido_clusters |= {
         int(cluster)
         for cluster, fila in actividad.iterrows()
         if int(fila["n"]) >= 30 and fila["k"] / fila["n"] < 0.25 * p0
