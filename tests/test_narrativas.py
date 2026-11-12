@@ -88,6 +88,68 @@ def test_cluster_pequeno_es_ruido_y_el_origen_no_queda_vacio():
     assert resultado["narrativa"].eq("").all()
 
 
+def test_piso_de_tamano_se_aplica_despues_de_filtrar_cores_ruidosos():
+    inicio = pd.Timestamp("2026-09-07T08:00:00-03:00")
+    filas = [
+        {
+            "comentario_id": f"pequeno-{i}",
+            "core": "core pequeño",
+            "respuesta_a": "externo",
+            "n_tokens": 5,
+            "fecha_dt": inicio + pd.Timedelta(minutes=i),
+        }
+        for i in range(20)
+    ]
+    filas.extend(
+        {
+            "comentario_id": f"ruido-{i}",
+            "core": "core esporadico",
+            "respuesta_a": "",
+            "n_tokens": 5,
+            "fecha_dt": inicio + pd.Timedelta(minutes=30 + i),
+        }
+        for i in range(15)
+    )
+    filas.extend(
+        {
+            "comentario_id": f"grande-{i}",
+            "core": "core grande",
+            "respuesta_a": "externo",
+            "n_tokens": 5,
+            "fecha_dt": inicio + pd.Timedelta(minutes=60 + i),
+        }
+        for i in range(30)
+    )
+    filas.append(
+        {
+            "comentario_id": "respuesta-corta",
+            "core": "",
+            "respuesta_a": "pequeno-0",
+            "n_tokens": 2,
+            "fecha_dt": inicio,
+        }
+    )
+
+    resultado, etiquetas = asignar(
+        pd.DataFrame(filas),
+        {"core pequeño": 0, "core esporadico": 0, "core grande": 1},
+    )
+
+    assert resultado.loc[
+        resultado["comentario_id"].str.startswith("pequeno-"), "narrativa"
+    ].eq("").all()
+    assert resultado.loc[
+        resultado["comentario_id"].str.startswith("ruido-"), "narrativa"
+    ].eq("").all()
+    assert resultado.loc[
+        resultado["comentario_id"].eq("respuesta-corta"), "narrativa"
+    ].iloc[0] == ""
+    assert etiquetas == {1: "n01"}
+    assert resultado.loc[
+        resultado["comentario_id"].str.startswith("grande-"), "narrativa"
+    ].eq("n01").all()
+
+
 def test_narrativa_emitida_tiene_fecha_origen():
     inicio = pd.Timestamp("2026-09-07T08:00:00-03:00")
     filas = [
