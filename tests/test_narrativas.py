@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+from nexo_signal.narrativas.describir import describir
 from nexo_signal.narrativas.origen import fechas_origen
 from nexo_signal.narrativas.ruido import asignar
 
@@ -167,3 +168,30 @@ def test_narrativa_emitida_tiene_fecha_origen():
     origen = fechas_origen(resultado, {"core repetido": np.array([1.0, 0.0])})
     assert resultado["narrativa"].ne("").any()
     assert all(origen[etiqueta] for etiqueta in resultado["narrativa"].unique() if etiqueta)
+
+
+def test_titulo_usa_core_central_y_texto_original_mas_frecuente():
+    inicio = pd.Timestamp("2026-09-07T08:00:00-03:00")
+    textos = [
+        "  Texto   central repetido!  "
+    ] * 5 + ["Otra variante central"] * 3 + ["Texto de fringe"] * 2
+    cores = ["central"] * 8 + ["fringe"] * 2
+    comentarios = pd.DataFrame(
+        {
+            "narrativa": ["n01"] * 10,
+            "respuesta_corta": [False] * 10,
+            "core": cores,
+            "postura": ["apoya"] * 10,
+            "n_tokens": [5] * 10,
+            "texto": textos,
+            "fecha_dt": [inicio + pd.Timedelta(minutes=i) for i in range(10)],
+        }
+    )
+    vectores = {
+        "central": np.array([1.0, 0.0]),
+        "fringe": np.array([0.0, 1.0]),
+    }
+
+    resultado = describir(comentarios, vectores)
+
+    assert resultado.loc[0, "titulo"] == "Texto central repetido!"
