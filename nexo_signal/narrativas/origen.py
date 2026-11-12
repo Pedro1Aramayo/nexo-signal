@@ -4,6 +4,8 @@ import pandas as pd
 
 
 def _similitudes_cores(grupo: pd.DataFrame, vectores: dict[str, np.ndarray]):
+    if "respuesta_corta" in grupo:
+        grupo = grupo.loc[~grupo["respuesta_corta"].fillna(False)]
     conteos = grupo["core"].value_counts()
     cores = []
     pesos = []
@@ -59,7 +61,7 @@ def fechas_origen(
         if candidatos.empty:
             origenes[narrativa] = ""
             continue
-        similitudes, mediana = _similitudes_cores(grupo, vectores)
+        similitudes, mediana = _similitudes_cores(no_cortos, vectores)
         if mediana is not None:
             centrales = candidatos.loc[
                 candidatos["core"].map(similitudes).ge(mediana)

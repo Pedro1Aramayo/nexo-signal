@@ -195,3 +195,44 @@ def test_titulo_usa_core_central_y_texto_original_mas_frecuente():
     resultado = describir(comentarios, vectores)
 
     assert resultado.loc[0, "titulo"] == "Texto central repetido!"
+
+
+def test_respuestas_cortas_no_arrastran_el_centroide_del_origen():
+    inicio = pd.Timestamp("2026-09-07T08:00:00-03:00")
+    filas = [
+        {
+            "narrativa": "n01",
+            "respuesta_corta": False,
+            "core": f"fringe-{i}",
+            "fecha_dt": inicio + pd.Timedelta(hours=i),
+        }
+        for i in range(3)
+    ]
+    inicio_central = inicio + pd.Timedelta(days=7)
+    filas.extend(
+        {
+            "narrativa": "n01",
+            "respuesta_corta": False,
+            "core": "central",
+            "fecha_dt": inicio_central + pd.Timedelta(minutes=15 * i),
+        }
+        for i in range(6)
+    )
+    filas.extend(
+        {
+            "narrativa": "n01",
+            "respuesta_corta": True,
+            "core": "respuesta",
+            "fecha_dt": inicio + pd.Timedelta(hours=3, minutes=i),
+        }
+        for i in range(20)
+    )
+    vectores = {
+        **{f"fringe-{i}": np.array([0.0, 1.0]) for i in range(3)},
+        "central": np.array([1.0, 0.0]),
+        "respuesta": np.array([0.0, 1.0]),
+    }
+
+    assert fechas_origen(pd.DataFrame(filas), vectores)["n01"] == (
+        "2026-09-14T08:00:00-03:00"
+    )
