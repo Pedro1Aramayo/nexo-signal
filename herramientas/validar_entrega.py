@@ -5,10 +5,9 @@ import tempfile
 from datetime import datetime
 from pathlib import Path
 
-import duckdb
 import pandas as pd
 
-from nexo_signal.ingesta.cargar import ORDEN_ENTRADA, cargar
+from nexo_signal.ingesta.cargar import cargar
 
 
 ARCHIVOS = {
@@ -27,26 +26,6 @@ ARCHIVOS = {
     ],
 }
 RUIDO = {"", "ninguna", "none", "null"}
-
-
-def _ruta_csv(datos: Path, nombre: str) -> Path:
-    ruta = datos / nombre
-    comprimida = ruta.with_suffix(ruta.suffix + ".gz")
-    if ruta.exists():
-        return ruta
-    if comprimida.exists():
-        return comprimida
-    raise FileNotFoundError(f"No se encontró {ruta} ni {comprimida}")
-
-
-def _filas_entrada(datos: Path) -> int:
-    ruta = _ruta_csv(datos, "comentarios.csv")
-    with duckdb.connect() as conexion:
-        return int(conexion.execute(
-            "SELECT count(*) FROM read_csv_auto(?, header=true, all_varchar=true, "
-            "null_padding=true, ignore_errors=true)",
-            [str(ruta)],
-        ).fetchone()[0])
 
 
 def _leer_csv(
@@ -116,11 +95,13 @@ def validar_entrega(datos: Path, entrega: Path) -> dict[str, int]:
             f"Directorios en raíz: esperados ['evidencia'], encontrados {sorted(directorios_raiz)}"
         )
 
-    input_rows = _filas_entrada(datos)
     with tempfile.TemporaryDirectory(prefix="nexo-validar-") as directorio_cache:
         tablas = cargar(datos, Path(directorio_cache))
     entrada_comentarios = tablas["comentarios"]
     entrada_cuentas = tablas["cuentas"]
+    input_rows = int(entrada_comentarios.attrs.get("ingesta", {}).get(
+        "filas_entrada", len(entrada_comentarios)
+    ))
     ids_entrada = entrada_comentarios["comentario_id"].tolist()
     cuentas_entrada = entrada_cuentas["cuenta_id"].tolist()
 

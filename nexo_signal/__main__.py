@@ -41,6 +41,7 @@ def ejecutar(datos: Path, entrega: Path, cache: Path) -> dict:
     inicio = time.perf_counter()
     tablas = cargar(datos, cache_corrida)
     comentarios = tablas["comentarios"]
+    estadisticas_ingesta = comentarios.attrs.get("ingesta", {})
     etapas["ingesta"] = round(time.perf_counter() - inicio, 3)
 
     inicio = time.perf_counter()
@@ -96,6 +97,7 @@ def ejecutar(datos: Path, entrega: Path, cache: Path) -> dict:
         "memoria_pico_mb": memoria_pico_mb(),
         "modelo": embeddings.MODELO,
         "revision_modelo": embeddings.REVISION,
+        "ingesta": estadisticas_ingesta,
         "conteos": {
             "comentarios": int(len(comentarios)),
             "cuentas": int(len(cuentas)),

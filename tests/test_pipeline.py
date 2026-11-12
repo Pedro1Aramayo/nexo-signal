@@ -42,7 +42,15 @@ def test_pipeline_con_datos_sucios(tmp_path, monkeypatch):
         {"comentario_id": "c10", "publicacion_id": "p1", "cuenta_id": "cuenta-0",
          "fecha": "2026-09-07T08:00:00-03:00", "texto": "duplicado", "respuesta_a": "", "me_gusta": "0"},
     ])
-    _guardar_gzip(pd.DataFrame(filas), datos / "comentarios.csv.gz")
+    archivo_comentarios = datos / "comentarios.csv"
+    pd.DataFrame(filas[:150]).to_csv(archivo_comentarios, index=False)
+    with archivo_comentarios.open("a", encoding="utf-8") as salida:
+        salida.write(
+            "malformado,p1,cuenta-1,2026-09-07T08:00:00-03:00,Texto,,0,extra\n"
+        )
+    pd.DataFrame(filas[150:]).to_csv(
+        archivo_comentarios, index=False, header=False, mode="a"
+    )
     _guardar_gzip(
         pd.DataFrame({"cuenta_id": [f"cuenta-{i}" for i in range(10)] + ["sin-comentarios"],
                       "usuario": ["u"] * 11, "fecha_creacion": [""] * 11,
@@ -78,9 +86,15 @@ def test_pipeline_con_datos_sucios(tmp_path, monkeypatch):
         assert (entrega / nombre).exists()
     comentarios = pd.read_csv(entrega / "comentarios.csv", dtype=str, keep_default_na=False)
     assert list(comentarios.columns) == ["comentario_id", "narrativa", "postura"]
-    assert len(comentarios) == 300
-    assert comentarios["comentario_id"].tolist() == [f"c{i}" for i in range(300)]
+    assert len(comentarios) == 301
+    assert comentarios["comentario_id"].tolist() == [
+        *(f"c{i}" for i in range(150)), "malformado",
+        *(f"c{i}" for i in range(150, 300)),
+    ]
     assert comentarios.loc[comentarios["comentario_id"].eq("c4"), "narrativa"].iloc[0] == ""
+    assert comentarios.loc[
+        comentarios["comentario_id"].eq("malformado"), "narrativa"
+    ].iloc[0] == ""
     cuentas = pd.read_csv(entrega / "cuentas.csv", dtype=str, keep_default_na=False)
     assert len(cuentas) == 11
     assert cuentas["cuenta_id"].tolist() == sorted(cuentas["cuenta_id"])
@@ -88,8 +102,16 @@ def test_pipeline_con_datos_sucios(tmp_path, monkeypatch):
     assert narrativas["narrativa"].tolist() == sorted(narrativas["narrativa"])
     limpios = pd.read_parquet(cache / "datos" / "comentarios.parquet")
     assert limpios.loc[limpios["comentario_id"].eq("c5"), "respuesta_a"].iloc[0] == ""
-    assert metricas["conteos"]["comentarios"] == 300
+    assert metricas["conteos"]["comentarios"] == 301
     assert metricas["modelo"] == pipeline.embeddings.MODELO
     assert metricas["revision_modelo"] == pipeline.embeddings.REVISION
+    assert metricas["ingesta"] == {
+        "filas_entrada": 304,
+        "comentarios_rechazados": 1,
+        "comentarios_recuperados": 1,
+    }
+    assert limpios.loc[
+        limpios["comentario_id"].eq("malformado"), "texto"
+    ].iloc[0] == ""
     resumen = validar_entrega(datos, entrega)
-    assert resumen == {"filas_entrada": 303, "ids_unicos": 300, "filas_salida": 300}
+    assert resumen == {"filas_entrada": 304, "ids_unicos": 301, "filas_salida": 301}
