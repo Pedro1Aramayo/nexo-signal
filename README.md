@@ -49,8 +49,8 @@ make setup && make descargar-final && make entrega && make validar
 
 Sobre el set final (150.000 comentarios), `make entrega` tarda unos 65 s (2,9 GB de memoria pico) en una
 máquina CPU de 8 núcleos y unos 31 GB de RAM, sin GPU. Se verificó desde un clon limpio con caché vacía:
-los tres CSV coinciden byte a byte con los commiteados en `entrega/`. La descarga verifica los archivos
-del release; sus SHA-256 publicados están en las notas de `set-final`. La primera ejecución descarga cerca de 470 MB desde
+los tres CSV coinciden byte a byte con los commiteados en `entrega/`. Los SHA-256 de los archivos descargados coincidieron con los publicados en
+las notas del release `set-final`. La primera ejecución descarga cerca de 470 MB desde
 Hugging Face, usando la revisión fijada del modelo. `datos/final/` se descarga desde el release
 `set-final` y no está incluido en el repositorio. La carpeta `entrega/` conserva en su raíz solo los
 cuatro archivos oficiales; las mediciones y demás evidencia se guardan en `entrega/evidencia/`.
