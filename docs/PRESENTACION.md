@@ -42,8 +42,10 @@ NEXO SIGNAL lee cientos de miles de comentarios en menos de un minuto, en una no
    | Narrativas /30 | 12.52 | 28.11 |
    | Coordinación /25 | 9.44 | 23.54 |
    | Total /55 | 21.96 | 51.65 |
-   | Tiempo | 16 s | ~50 s |
+   | Tiempo (200k, práctica) | 16 s | ~50–107 s |
    | USD IA | 0 | 0 |
+
+   **Set final (sin verdad, 150.000 comentarios):** 12 narrativas, 19,5% de ruido, 3 operaciones coordinadas (94 cuentas: 52 con texto repetido sincronizado, 21 de cuentas antiguas en red de respuestas, 21 nocturnas en una sola publicación), 65 s en CPU, USD 0.
 
 4. **Generalización:** cada tema de práctica corrido como dataset nuevo, sin reajustar (colectivo 30.6, hospital 38.3, litio 51.4). Así encontramos y corregimos que la resolución dependía del tamaño del dataset.
 5. **Costo y escala:**

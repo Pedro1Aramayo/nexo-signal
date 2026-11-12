@@ -124,3 +124,14 @@ Confirmado: con 0.5 el resultado dependía del tamaño del dataset. Con 0.10 la 
   - 50 s, 2.66 GB pico, 14 narrativas detectadas.
 - Por tema: colectivo **30.60**, hospital **38.34**, litio **51.35**. Antes eran 27.08 / 34.29 / 46.16.
 - Pendiente conocido: el origen de H3 (arranque chico de la campaña nocturna) se fecha tarde.
+
+### Set final (commits `cdbca91`, `96984df`)
+
+- Descarga con `make descargar-final`; los SHA-256 coinciden con los del release. Esquema idéntico al de práctica:
+  150.000 comentarios, 12.002 cuentas, 372 publicaciones, 8 fuentes, 0 filas rechazadas.
+- Las dos primeras corridas dieron el mismo `comentarios.csv` y `narrativas.csv` pero distinto `cuentas.csv`
+  (4 vs 3 operaciones). Causa: Louvain de coordinación con nodos string y aristas en el orden no garantizado de
+  DuckDB, sensible a `PYTHONHASHSEED`. Corrección: `_louvain` reetiqueta a enteros ordenados e inserta aristas
+  ordenadas. Verificado con `PYTHONHASHSEED=1` y `=2` (CSV idénticos) y desde un clon limpio (idéntico a lo
+  commiteado). Práctica sin cambios: 51.65 / 55.
+- Resultado final: 12 narrativas, 19,5% de ruido, 3 grupos coordinados (52, 21 y 21 cuentas), 65 s, 2,9 GB pico, USD 0.
