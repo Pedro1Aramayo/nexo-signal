@@ -9,8 +9,7 @@ La arquitectura propuesta está en [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md
 
 ## Estado
 
-Fase 1 (preparación): entorno reproducible, línea base oficial ejecutada y medida, arquitectura propuesta.
-El pipeline propio todavía no está implementado.
+Fase 2: motor propio para agrupar comentarios por significado, estimar postura y detectar coordinación.
 
 | | Narrativas (/30) | Coordinación (/25) | Total (/55) |
 |---|---|---|---|
@@ -18,13 +17,43 @@ El pipeline propio todavía no está implementado.
 
 ## Cómo correr
 
-Requisitos: Python 3.9+ y `make`.
+Requisitos: Python 3.10+ y `make`.
 
 ```bash
 make setup               # crea .venv e instala requirements-nexo.txt
-make linea-base          # corre ejemplos/linea_base.py y registra tiempo/hardware en salida/practica_linea_base/medicion.json
-make puntuar-linea-base  # corre evaluacion/puntuar.py y guarda salida/practica_linea_base/puntaje.json
+python -m nexo_signal --datos datos/practica --entrega salida/practica_nexo
+make nexo                # corre el pipeline y registra la medición de tiempo/memoria
+make puntuar-nexo        # puntúa salida/practica_nexo con la verdad del set de práctica
+make diagnostico         # informa pureza, postura y confusión de ruido por cluster
+make entrega             # procesa datos/final y escribe la entrega final
+make validar             # valida el formato de entrega contra datos/final
 ```
+
+El comando directo es la forma de ejecución de una sola etapa. El pipeline guarda tablas limpias e
+intermedias en `.cache/`, usa DuckDB + Parquet local y deja exactamente los cuatro archivos oficiales
+en la raíz de salida; las métricas, mediciones y evidencia de coordinación quedan en `evidencia/`.
+El modelo semántico corre localmente en CPU; no hay llamadas a servicios de IA.
+
+Para puntuar otro directorio de salida, use `make puntuar-nexo NEXO_OUT=...`. La línea base sigue disponible:
+
+```bash
+make linea-base
+make puntuar-linea-base
+```
+
+## Reproducir la entrega
+
+```bash
+make setup && make descargar-final && make entrega && make validar
+```
+
+Sobre el set final (150.000 comentarios), `make entrega` tarda unos 65 s (2,9 GB de memoria pico) en una
+máquina CPU de 8 núcleos y unos 31 GB de RAM, sin GPU. Se verificó desde un clon limpio con caché vacía:
+los tres CSV coinciden byte a byte con los commiteados en `entrega/`. Los SHA-256 de los archivos descargados coincidieron con los publicados en
+las notas del release `set-final`. La primera ejecución descarga cerca de 470 MB desde
+Hugging Face, usando la revisión fijada del modelo. `datos/final/` se descarga desde el release
+`set-final` y no está incluido en el repositorio. La carpeta `entrega/` conserva en su raíz solo los
+cuatro archivos oficiales; las mediciones y demás evidencia se guardan en `entrega/evidencia/`.
 
 ## Qué existía antes del evento y qué hicimos nosotros
 
@@ -32,6 +61,8 @@ Preexistente (repositorio oficial `qualydata-org/desafio-qualydata`, commit `e72
 `DESAFIO.md` (README oficial, solo renombrado), `datos/practica/`, `ejemplos/linea_base.py`,
 `evaluacion/puntuar.py`, `requirements.txt`, `.gitignore`.
 
-Desarrollado durante el evento: `README.md`, `Makefile`, `requirements-nexo.txt`, `herramientas/`, `docs/`.
+Desarrollado durante el evento: `README.md`, `Makefile`, `requirements-nexo.txt`, `herramientas/`,
+`docs/`, `nexo_signal/` y `tests/`.
 
-Librerías públicas: numpy, pandas, scikit-learn, scipy, DuckDB, PyArrow.
+Librerías públicas: numpy, pandas, scikit-learn, scipy, DuckDB, PyArrow, PyTorch,
+Sentence Transformers, Transformers y NetworkX.

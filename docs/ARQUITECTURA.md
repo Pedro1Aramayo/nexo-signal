@@ -55,6 +55,43 @@ tests/                     # pruebas con datos sucios y chicos
 Flujo: `ingesta -> texto -> narrativas (ruido, agrupar, postura, origen, describir) -> coordinacion -> reporte`.
 Cada etapa escribe Parquet intermedio en `salida/<corrida>/cache/` para poder reanudar y medir por etapa.
 
+## Implementación Fase 2 — NEXO ENGINE (lo que corre hoy)
+
+Comando único: `python -m nexo_signal --datos <carpeta> --entrega <carpeta>` (o `make nexo` / `make entrega`).
+
+**Narrative DNA**
+1. *Núcleo del comentario.* Normalización (minúsculas, sin acentos/emojis/URLs, alargamientos colapsados) y
+   eliminación de muletillas de apertura/cierre **aprendidas del propio corpus** (segmentos de borde muy frecuentes
+   y combinados con contenidos muy distintos). 200k comentarios → ~16k núcleos únicos: solo esos se vectorizan.
+2. *Embeddings locales.* `paraphrase-multilingual-MiniLM-L12-v2` en CPU, caché en disco por hash del núcleo.
+3. *Agrupamiento sin k fijo.* Grafo de núcleos: k-vecinos semánticos (coseno ≥ 0.6) + aristas por respuestas largas
+   (una respuesta discute la misma afirmación que su padre, aunque la contradiga). Louvain decide la cantidad de grupos.
+   Sin las aristas de respuesta, apoyo y rechazo de una misma narrativa quedan en grupos distintos.
+4. *Ruido por interacción.* Los comentarios de una narrativa generan conversación; el ruido no. Se marca ruido a nivel
+   núcleo (test binomial contra la tasa global de interacción) y a nivel grupo (interacción < 25% de la global).
+5. *Postura.* Dentro de cada narrativa, partición firmada: similitud semántica une, respuesta larga separa
+   (las respuestas largas contradicen a su padre). El autovector principal da los dos lados; el lado con mayor
+   tasa de marcadores genéricos de refutación ("falso", "pero", "no es", "pruebas"…) es *rechaza*.
+6. *Respuestas cortas* ("Tal cual", "Exacto"): heredan narrativa y postura del comentario original; se invierte la
+   postura si la respuesta expresa desacuerdo.
+7. *Origen.* Primer instante con actividad sostenida del grupo (mínimo de comentarios en una ventana de 6 h).
+8. *Descripción.* Título = núcleo más frecuente del lado que apoya; frases clave por c-TF-IDF.
+
+**Coordination Fingerprint**
+1. *Señales de pares de cuentas* (DuckDB): co-publicación en la misma publicación con ≤10 min de diferencia en ≥2
+   publicaciones distintas; mismo texto (núcleo ≥25 caracteres) con ≤2 h de diferencia repetido ≥2 veces; respuestas entre sí.
+2. *Candidatos:* comunidades Louvain del grafo sincronía+texto y del k-truss (k=3) del grafo de respuestas
+   (operaciones que no copian texto pero se responden entre sí).
+3. *Coordinación vs. viralidad:* un grupo se acepta si su densidad interna ≥ 0.3 **y** supera ≥10× lo esperable por el
+   modelo de configuración (las cuentas muy activas o una publicación viral generan muchas coincidencias, pero
+   repartidas; una operación las concentra en un grupo chico).
+4. *Expansión:* se suman cuentas con varias conexiones al grupo que representan una fracción grande de su actividad.
+5. *Evidencia complementaria* por grupo (`grupos_coordinados.csv`): antigüedad de las cuentas, seguidores, horario
+   nocturno, publicaciones; sirve para explicar y auditar, no decide la detección.
+
+Ninguna regla menciona temas, narrativas o campañas del set de práctica; los umbrales son relativos
+(tasas globales, modelo nulo) para trasladarse a datos nuevos.
+
 ## Decisiones técnicas
 
 - **Almacenamiento: DuckDB + Parquet.** Columnar, comprimido, sin servidor, SQL analítico rápido en una notebook y
@@ -79,3 +116,25 @@ Cada etapa escribe Parquet intermedio en `salida/<corrida>/cache/` para poder re
 - Sin llamadas a una API de IA por comentario; todo el motor corre en CPU.
 - `evaluacion/puntuar.py` no se modifica.
 - Lo preexistente y lo desarrollado durante el evento queda registrado en el README y en la bitácora.
+
+## Visión de producto (posterior al desafío, no implementado)
+
+El motor (`nexo_signal`) se diseña como núcleo reutilizable: todo lo de abajo consume sus salidas (narrativas, postura, cuentas y grupos coordinados) sin reprocesar texto.
+
+### NEXO SIGNAL — dashboard interactivo
+- Mapa de narrativas: tamaño, título, frases clave, balance apoya/rechaza y curva temporal desde la fecha de origen.
+- Drill-down a comentarios representativos y a la cadena de respuestas que originó cada narrativa.
+- Alertas cuando aparece una narrativa nueva (cambio de régimen) o cuando una existente se acelera.
+- Base técnica: los Parquet de salida + DuckDB como motor de consulta; API liviana encima y frontend web.
+
+### ORGANIC LENS — actividad total vs. orgánica
+- Toda métrica (volumen por narrativa, postura, picos temporales) se muestra dos veces: con todas las cuentas y excluyendo las cuentas marcadas por Coordination Fingerprint.
+- La diferencia cuantifica cuánto de una conversación está inflado por operaciones coordinadas.
+- Cada grupo coordinado expone su evidencia (densidad, ratio contra lo esperable, canal: sincronía/texto o respuestas, antigüedad y horarios) para que la exclusión sea auditable y no una caja negra.
+
+### NEXO CONNECT — integración con Instagram
+- Conexión de cuentas profesionales mediante la API oficial de Meta (Instagram Graph API) con OAuth y permisos explícitos del titular; sin scraping.
+- Ingesta periódica de comentarios de las publicaciones propias hacia el mismo formato de `datos/` y clasificación automática por categorías/narrativas con el motor.
+- Requisitos a resolver antes de implementar: revisión de app de Meta, límites de tasa, retención y borrado de datos, y consentimiento.
+
+Prioridad: ninguna de estas piezas se implementa hasta cerrar la entrega del desafío.

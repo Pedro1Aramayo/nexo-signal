@@ -1,0 +1,19 @@
+{
+  "comando": ".venv/bin/python -m nexo_signal --datos datos/final --entrega entrega --cache /home/ubuntu/exp/cache_oficial",
+  "inicio_utc": "2026-11-12T20:14:11+00:00",
+  "codigo_salida": 0,
+  "segundos_reloj": 64.96,
+  "segundos_cpu": 221.12,
+  "memoria_pico_mb": 2946.4,
+  "hardware": {
+    "cpu": "Intel(R) Xeon(R) Processor",
+    "nucleos": 8,
+    "ram_gb": 31.3,
+    "gpu": null,
+    "so": "Linux 6.8.0-1060-aws",
+    "python": "3.10.12"
+  },
+  "almacenamiento_mb": {
+    "entrega": 2.71
+  }
+}

@@ -1,8 +1,17 @@
 # Entorno reproducible de NEXO SIGNAL (Python 3.10+). Versiones fijadas para que el jurado pueda re-correr.
 # requirements.txt queda intacto: es el del repo oficial y solo cubre ejemplos/linea_base.py.
+--extra-index-url https://download.pytorch.org/whl/cpu
 numpy==2.2.6
 pandas==2.3.3
 scikit-learn==1.7.2
 scipy==1.15.3
 duckdb==1.5.6
 pyarrow==25.0.1
+torch==2.14.1
+sentence-transformers==6.3.0
+transformers==5.20.2
+networkx==3.4.2
+huggingface-hub==2.4.0
+tokenizers==0.23.3
+safetensors==0.8.0
+pytest==8.4.2
