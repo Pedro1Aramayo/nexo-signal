@@ -146,8 +146,13 @@ def analizar_coordinacion(
         indice: {cuenta for cuenta, propietario in propietarios.items() if propietario == indice}
         for indice in range(len(expandidos))
     }
+    miembros_por_indice = {
+        indice: miembros
+        for indice, miembros in miembros_por_indice.items()
+        if len(miembros) >= 3
+    }
     orden = sorted(
-        (indice for indice, miembros in miembros_por_indice.items() if miembros),
+        miembros_por_indice,
         key=lambda indice: (
             -len(miembros_por_indice[indice]),
             expandidos[indice]["canal"],
