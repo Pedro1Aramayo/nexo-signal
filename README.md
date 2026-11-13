@@ -75,6 +75,10 @@ Luego abre [http://localhost:5173](http://localhost:5173). El plan de integracio
 - NEXO CONNECT y la autorización OAuth no están implementados (ver [`docs/INTEGRACIONES.md`](docs/INTEGRACIONES.md)).
 - La clasificación por categorías es experimental: reglas heurísticas, precisión no medida.
 
+### Limitaciones conocidas
+
+**Asignación de narrativa en la operación G1 (set final).** NEXO ENGINE detectó G1 como un grupo coordinado de 52 cuentas y 363 comentarios, cuyos mensajes más repetidos apoyan la obra del dique («Sí a la obra: el dique es agua para la ciudad y para el riego»). Sin embargo, el motor asignó 240 de esos 363 comentarios a la narrativa n01, cuyo título es «Pongan luminarias en barrio Norte, de noche es boca de lobo.» y que en su mayoría trata sobre seguridad e iluminación (15.967 comentarios en total). Es un error de agrupamiento del motor: los textos de la campaña quedaron mezclados en una narrativa no relacionada. La detección del grupo y de sus cuentas no depende de esa asignación. No modificamos `entrega/` ni el motor después de la validación; el dashboard muestra la asignación tal como la produjo NEXO ENGINE.
+
 ## Qué existía antes del evento y qué hicimos nosotros
 
 Preexistente (repositorio oficial `qualydata-org/desafio-qualydata`, commit `e727d18`), sin modificar:

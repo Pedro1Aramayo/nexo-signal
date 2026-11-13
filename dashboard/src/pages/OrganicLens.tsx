@@ -64,7 +64,7 @@ export default function OrganicLens() {
           <div className="grid gap-4 sm:grid-cols-3">
             <Cifra t="Actividad total" v={num(n.total)} c="bg-slate-50" />
             <Cifra t="Actividad sin coordinación detectada" v={num(n.organico_total)} c="bg-emerald-50 text-emerald-800" />
-            <Cifra t="De cuentas coordinadas" v={`${num(n.coordinados)} (${pct(n.coordinados, n.total)})`} c="bg-rose-50 text-rose-800" />
+            <Cifra t="Comentarios de cuentas coordinadas" v={`${num(n.coordinados)} (${pct(n.coordinados, n.total)})`} c="bg-rose-50 text-rose-800" />
           </div>
           <div>
             <div className="mb-2 flex gap-4 text-sm"><span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-emerald-500" />Sin coordinación detectada</span><span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-rose-300" />Aporte coordinado</span></div>

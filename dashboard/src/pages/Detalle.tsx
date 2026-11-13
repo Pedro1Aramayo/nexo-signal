@@ -96,7 +96,7 @@ export default function Detalle() {
               <div className="flex flex-wrap gap-5 text-lg text-slate-600">
                 <span className="flex items-center gap-2"><MessageCircle className="h-5 w-5" /> {num(total)} comentarios</span>
                 <span className="flex items-center gap-2"><Heart className="h-5 w-5" /> {num(pub.me_gusta_total)} me gusta</span>
-                {resumen.coord > 0 && <span className="flex items-center gap-2 text-rose-600"><ShieldAlert className="h-5 w-5" /> {num(resumen.coord)} de cuentas coordinadas</span>}
+                {resumen.coord > 0 && <span className="flex items-center gap-2 text-rose-600"><ShieldAlert className="h-5 w-5" /> {num(resumen.coord)} comentarios de cuentas coordinadas</span>}
               </div>
             </div>
           </Tarjeta>
@@ -117,7 +117,7 @@ export default function Detalle() {
             )}
             {resumen.coord > 0 && (
               <button onClick={() => { setSoloCoord(!soloCoord); reiniciar() }} className={`rounded-full px-4 py-2 font-medium ring-1 ${soloCoord ? 'bg-rose-600 text-white ring-rose-600' : 'bg-white text-slate-700 ring-slate-200'}`}>
-                Solo cuentas coordinadas
+                Solo comentarios de cuentas coordinadas
               </button>
             )}
             <span className="ml-auto text-slate-500">{num(filtrados.length)} comentarios</span>

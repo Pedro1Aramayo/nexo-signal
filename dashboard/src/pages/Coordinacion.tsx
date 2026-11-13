@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Network, Users, Moon, CalendarClock, Quote } from 'lucide-react'
-import { num, useGrupos, useNarrativas } from '../data'
+import { num, pct, useGrupos, useNarrativas } from '../data'
 import { Avatar, Cargando, Encabezado, ErrorCarga, Tarjeta } from '../ui'
 
 const CANAL: Record<string, string> = {
@@ -37,13 +37,25 @@ export default function Coordinacion() {
           </div>
           <div className="grid gap-5 lg:grid-cols-2">
             <div>
-              <h3 className="mb-2 text-lg font-semibold">Mensajes típicos</h3>
+              <h3 className="mb-2 text-lg font-semibold">Mensajes más repetidos del grupo</h3>
               <div className="space-y-2">
                 {g.ejemplos.slice(0, 4).map((e) => (
                   <p key={e} className="flex gap-2 rounded-2xl bg-slate-50 p-3 text-[16px]"><Quote className="mt-1 h-4 w-4 shrink-0 text-slate-400" />{e}</p>
                 ))}
               </div>
-              {g.narrativas.length > 0 && <p className="mt-3 text-slate-600">Impulsa sobre todo: <b>«{titulos.get(g.narrativas[0].narrativa) ?? g.narrativas[0].narrativa}»</b></p>}
+              {g.narrativas.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <h4 className="text-sm font-semibold text-slate-700">Narrativas que NEXO ENGINE asignó a sus comentarios</h4>
+                  <ul className="space-y-1 text-sm text-slate-600">
+                    {g.narrativas.slice(0, 3).map((n) => (
+                      <li key={n.narrativa}>
+                        «{titulos.get(n.narrativa) ?? n.narrativa}» — {num(n.n)} de {num(g.comentarios)} comentarios ({pct(n.n, g.comentarios)})
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-sm text-slate-500">Asignación automática del motor: puede no coincidir con el contenido de los mensajes. Ver «Limitaciones conocidas» en el README.</p>
+                </div>
+              )}
             </div>
             <div>
               <h3 className="mb-2 text-lg font-semibold">Publicaciones donde más actúa</h3>

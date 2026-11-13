@@ -173,7 +173,7 @@ function FilaPublicacion({ p }: { p: Publicacion }) {
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-slate-600">
           <span className="flex items-center gap-1.5"><Heart className="h-5 w-5" /> {num(p.me_gusta_total)}</span>
           <span className="flex items-center gap-1.5"><MessageCircle className="h-5 w-5" /> {num(p.comentarios)}</span>
-          {p.coordinados > 0 && <span className="flex items-center gap-1.5 font-medium text-rose-600"><ShieldAlert className="h-5 w-5" /> {num(p.coordinados)} coordinados</span>}
+          {p.coordinados > 0 && <span className="flex items-center gap-1.5 font-medium text-rose-600"><ShieldAlert className="h-5 w-5" /> {num(p.coordinados)} comentarios coordinados</span>}
         </div>
         <p className="text-xs text-slate-500">Categorías: clasificación experimental (reglas heurísticas, precisión no medida)</p>
       </div>
