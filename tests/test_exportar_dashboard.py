@@ -75,6 +75,15 @@ def test_exporta_jsons_y_comentarios_por_publicacion(tmp_path):
                 "respuesta_a": "c1",
                 "me_gusta": "1",
             },
+            {
+                "comentario_id": "c1",
+                "publicacion_id": "p1",
+                "cuenta_id": "u1",
+                "fecha": "2026-09-07T08:03:00-03:00",
+                "texto": "Comentario duplicado",
+                "respuesta_a": "",
+                "me_gusta": "99",
+            },
         ]),
         datos / "comentarios.csv.gz",
     )

@@ -202,6 +202,9 @@ def exportar(
         "publicacion_id", keep="first"
     )
     comentarios_raw = _leer_tabla(datos, "comentarios.csv")
+    comentarios_raw = comentarios_raw[
+        comentarios_raw["comentario_id"].ne("")
+    ].drop_duplicates("comentario_id", keep="first")
     cuentas_raw = _ordenar_cuentas(_leer_tabla(datos, "cuentas.csv"))
 
     comentarios_motor = pd.read_csv(
