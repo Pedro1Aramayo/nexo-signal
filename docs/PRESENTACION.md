@@ -1,7 +1,7 @@
 # NEXO SIGNAL — material para video y pitch (Hacki)
 
 ## Mensaje central (1 frase)
-NEXO SIGNAL lee cientos de miles de comentarios en menos de un minuto, en una notebook y sin pagar IA. Encuentra qué se está diciendo, quién apoya y quién rechaza, cuándo empezó cada narrativa y qué parte de la conversación está fabricada por operaciones coordinadas.
+NEXO SIGNAL lee cientos de miles de comentarios en aproximadamente 65 segundos, en una notebook y sin pagar IA. Encuentra qué se está diciendo, quién apoya y quién rechaza, cuándo empezó cada narrativa y qué parte de la conversación está fabricada por operaciones coordinadas.
 
 ## Guion del video (≈ 3 min)
 1. **Problema (20 s).** En una conversación pública, 200.000 comentarios no se pueden leer, y la IA comentario por comentario es lenta y cara. Las operaciones coordinadas no se ven mirando un comentario: aparecen solo en el conjunto.

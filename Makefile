@@ -8,8 +8,9 @@ LB_OUT ?= salida/practica_linea_base
 NEXO_OUT ?= salida/practica_nexo
 ENTREGA_OUT ?= entrega
 CACHE ?= .cache
+CONJUNTO ?= practica
 
-.PHONY: setup linea-base puntuar-linea-base nexo puntuar-nexo entrega descargar-final validar demo diagnostico test
+.PHONY: setup linea-base puntuar-linea-base nexo puntuar-nexo entrega descargar-final validar demo dashboard-datos dashboard diagnostico test
 
 setup:
 	$(PYTHON) -m venv $(VENV)
@@ -42,6 +43,12 @@ validar:
 
 demo:
 	$(PY) herramientas/demo.py --datos $(DATOS_FINAL) --entrega $(ENTREGA_OUT) --salida docs/demo/nexo_signal.html
+
+dashboard-datos:
+	$(PY) herramientas/exportar_dashboard.py --conjunto $(CONJUNTO) --salida dashboard/public/data
+
+dashboard:
+	cd dashboard && npm install && npm run dev
 
 diagnostico:
 	$(PY) -m nexo_signal.reporte.diagnostico --datos $(DATOS) --entrega $(NEXO_OUT)

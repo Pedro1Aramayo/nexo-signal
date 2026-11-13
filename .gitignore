@@ -8,3 +8,6 @@ datos/final/
 *.log
 .cache/
 modelos/
+dashboard/node_modules/
+dashboard/dist/
+dashboard/public/data/

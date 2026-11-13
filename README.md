@@ -55,6 +55,30 @@ Hugging Face, usando la revisión fijada del modelo. `datos/final/` se descarga 
 `set-final` y no está incluido en el repositorio. La carpeta `entrega/` conserva en su raíz solo los
 cuatro archivos oficiales; las mediciones y demás evidencia se guardan en `entrega/evidencia/`.
 
+## Dashboard (Fase 3, en desarrollo)
+
+Requiere Node.js 20. Por defecto usa `datos/practica` y `salida/practica_nexo`. Para cambiar el
+conjunto de datos (el modo final lee `datos/final` y `entrega`) y arrancar Vite:
+
+```bash
+make dashboard-datos CONJUNTO=practica # o CONJUNTO=final
+make dashboard
+```
+
+Luego abre [http://localhost:5173](http://localhost:5173). El plan de integraciones futuras está en
+[`docs/INTEGRACIONES.md`](docs/INTEGRACIONES.md).
+
+### Qué es real y qué es demostración
+
+- El motor y los resultados son reales y se ejecutan sobre datos sintéticos de QualyData.
+- Las plataformas sociales se asignan solo para demostrar la interfaz; no hay cuentas conectadas.
+- NEXO CONNECT y la autorización OAuth no están implementados (ver [`docs/INTEGRACIONES.md`](docs/INTEGRACIONES.md)).
+- La clasificación por categorías es experimental: reglas heurísticas, precisión no medida.
+
+### Limitaciones conocidas
+
+**Asignación de narrativa en la operación G1 (set final).** NEXO ENGINE detectó G1 como un grupo coordinado de 52 cuentas y 363 comentarios, cuyos mensajes más repetidos apoyan la obra del dique («Sí a la obra: el dique es agua para la ciudad y para el riego»). Sin embargo, el motor asignó 240 de esos 363 comentarios a la narrativa n01, cuyo título es «Pongan luminarias en barrio Norte, de noche es boca de lobo.» y que en su mayoría trata sobre seguridad e iluminación (15.967 comentarios en total). Es un error de agrupamiento del motor: los textos de la campaña quedaron mezclados en una narrativa no relacionada. La detección del grupo y de sus cuentas no depende de esa asignación. No modificamos `entrega/` ni el motor después de la validación; el dashboard muestra la asignación tal como la produjo NEXO ENGINE.
+
 ## Qué existía antes del evento y qué hicimos nosotros
 
 Preexistente (repositorio oficial `qualydata-org/desafio-qualydata`, commit `e727d18`), sin modificar:
