@@ -4,6 +4,6 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  server: { host: true, port: 5173, allowedHosts: true },
+  server: { host: true, port: 5173, allowedHosts: ['.devinapps.com'] },
   preview: { host: true, port: 4173 },
 })
