@@ -159,10 +159,10 @@ function FilaPublicacion({ p }: { p: Publicacion }) {
   const top = p.narrativas[0]
   const pos = postura(p)
   return (
-    <div className="grid gap-4 rounded-2xl border border-slate-200 p-4 transition hover:border-indigo-200 hover:shadow-md md:grid-cols-[auto_minmax(0,1fr)_170px_240px] md:items-center">
-      <MarcaPlataforma p={p.plataforma_demo} size="h-12 w-12 hidden md:flex" />
-      <div className="min-w-0 space-y-2">
-        <div className="flex items-center gap-3">
+    <div className="grid grid-cols-1 gap-4 rounded-2xl border border-slate-200 p-4 transition hover:border-indigo-200 hover:shadow-md sm:grid-cols-[170px_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1fr)_170px_240px] 2xl:items-center">
+      <div className="min-w-0 space-y-2 sm:col-span-2 2xl:col-span-1">
+        <div className="flex min-w-0 items-center gap-3">
+          <MarcaPlataforma p={p.plataforma_demo} size="h-10 w-10 shrink-0" />
           <Avatar nombre={p.fuente_nombre} />
           <div className="min-w-0">
             <div className="truncate text-lg font-semibold">{p.fuente_nombre}</div>
@@ -175,12 +175,12 @@ function FilaPublicacion({ p }: { p: Publicacion }) {
           <span className="flex items-center gap-1.5"><MessageCircle className="h-5 w-5" /> {num(p.comentarios)}</span>
           {p.coordinados > 0 && <span className="flex items-center gap-1.5 font-medium text-rose-600"><ShieldAlert className="h-5 w-5" /> {num(p.coordinados)} coordinados</span>}
         </div>
+        <p className="text-xs text-slate-500">Categorías: clasificación experimental (reglas heurísticas, precisión no medida)</p>
       </div>
-      <div className={`relative hidden h-32 overflow-hidden rounded-2xl md:block ${plat.fondo}`}>
+      <div className={`relative hidden h-32 overflow-hidden rounded-2xl sm:block ${plat.fondo}`}>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,.4),transparent_60%)]" />
         <LogoPlataforma p={p.plataforma_demo} className="absolute right-3 top-3 h-6 w-6 text-white/80" />
         <div className="absolute inset-x-3 bottom-3">
-          <div className="mb-1 text-[9px] font-medium leading-tight text-white">Clasificación experimental · reglas heurísticas, precisión no medida</div>
           <div className="flex h-2 overflow-hidden rounded-full bg-white/30">
             {ORDEN_CATEGORIAS.map((c) => <div key={c} className={CATEGORIAS[c].punto} style={{ width: `${(100 * (p.categorias[c] ?? 0)) / Math.max(p.comentarios, 1)}%` }} />)}
           </div>

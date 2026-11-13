@@ -137,6 +137,8 @@ export function Layout() {
               key={a}
               to={a}
               end={a === '/'}
+              title={texto}
+              aria-label={texto}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-2xl px-3 py-3 text-lg font-medium transition lg:px-4 ${
                   isActive ? 'bg-gradient-to-r from-indigo-500 to-blue-500 shadow-lg shadow-indigo-900/40' : 'text-indigo-100 hover:bg-white/10'
@@ -144,7 +146,7 @@ export function Layout() {
               }
             >
               <Icono className="h-6 w-6 shrink-0" />
-              <span className="hidden md:inline">{texto}</span>
+              <span className="hidden lg:inline">{texto}</span>
             </NavLink>
           ))}
         </nav>
