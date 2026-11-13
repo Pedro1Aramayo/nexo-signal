@@ -84,6 +84,15 @@ def test_exporta_jsons_y_comentarios_por_publicacion(tmp_path):
                 "respuesta_a": "",
                 "me_gusta": "99",
             },
+            {
+                "comentario_id": "c9",
+                "publicacion_id": "p1",
+                "cuenta_id": "u2",
+                "fecha": "2026-09-09T08:01:00-03:00",
+                "texto": "Texto neutral",
+                "respuesta_a": "",
+                "me_gusta": "0",
+            },
         ] + [
             {
                 "comentario_id": f"c{i}",
@@ -122,6 +131,7 @@ def test_exporta_jsons_y_comentarios_por_publicacion(tmp_path):
         pd.DataFrame([
             {"comentario_id": "c1", "narrativa": "n01", "postura": "apoya"},
             {"comentario_id": "c2", "narrativa": "", "postura": ""},
+            {"comentario_id": "c9", "narrativa": "n01", "postura": "apoya"},
         ] + [
             {
                 "comentario_id": f"c{i}",
@@ -181,7 +191,7 @@ def test_exporta_jsons_y_comentarios_por_publicacion(tmp_path):
     resumen = json.loads((salida / "resumen.json").read_text(encoding="utf-8"))
     assert resumen["conjunto"] == "final"
     assert resumen["dataset"] == "Set final QualyData (sintético)"
-    assert resumen["comentarios"] == 8
+    assert resumen["comentarios"] == 9
     assert resumen["publicaciones"] == 1
     assert resumen["fuentes"] == 1
     assert resumen["cuentas"] == 2
@@ -193,37 +203,37 @@ def test_exporta_jsons_y_comentarios_por_publicacion(tmp_path):
         "queja": 0,
         "consulta": 0,
         "elogio": 0,
-        "otro": 7,
+        "otro": 8,
     }
 
     fuente = json.loads((salida / "fuentes.json").read_text(encoding="utf-8"))[0]
     assert fuente["plataforma_demo"] == "instagram"
     assert fuente["publicaciones"] == 1
-    assert fuente["comentarios"] == 8
+    assert fuente["comentarios"] == 9
 
     publicacion = json.loads(
         (salida / "publicaciones.json").read_text(encoding="utf-8")
     )[0]
-    assert publicacion["comentarios"] == 8
+    assert publicacion["comentarios"] == 9
     assert publicacion["coordinados"] == 1
     assert publicacion["ruido"] == 1
     assert publicacion["me_gusta_total"] == 4
     assert [n["narrativa"] for n in publicacion["narrativas"]] == [
         f"n{i:02d}" for i in range(1, 8)
     ]
-    assert all(n["n"] == 1 for n in publicacion["narrativas"])
+    assert [n["n"] for n in publicacion["narrativas"]] == [2, 1, 1, 1, 1, 1, 1]
 
     narrativa = json.loads(
         (salida / "narrativas.json").read_text(encoding="utf-8")
     )[0]
-    assert narrativa["total"] == 1
-    assert narrativa["organico_total"] == 0
+    assert narrativa["total"] == 2
+    assert narrativa["organico_total"] == 1
     assert narrativa["coordinados"] == 1
-    assert narrativa["serie"] == [{
-        "dia": "2026-09-07",
-        "total": 1,
-        "organico": 0,
-    }]
+    assert narrativa["serie"] == [
+        {"dia": "2026-09-07", "total": 1, "organico": 0},
+        {"dia": "2026-09-08", "total": 0, "organico": 0},
+        {"dia": "2026-09-09", "total": 1, "organico": 1},
+    ]
 
     grupo = json.loads(
         (salida / "coordinacion.json").read_text(encoding="utf-8")
@@ -237,7 +247,7 @@ def test_exporta_jsons_y_comentarios_por_publicacion(tmp_path):
         (salida / "comentarios" / "p1.json").read_text(encoding="utf-8")
     )
     assert [comentario["id"] for comentario in comentarios] == [
-        f"c{i}" for i in range(1, 9)
+        f"c{i}" for i in range(1, 10)
     ]
     assert comentarios[0]["categoria"] == "sugerencia"
     assert comentarios[0]["grupo"] == "G1"

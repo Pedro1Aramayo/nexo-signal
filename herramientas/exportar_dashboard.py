@@ -264,6 +264,14 @@ def exportar(
     comentarios["_dia"] = (
         comentarios["_fecha_ts"].dt.tz_convert("-03:00").dt.strftime("%Y-%m-%d")
     ).fillna("")
+    dias_validos = comentarios.loc[comentarios["_dia"].ne(""), "_dia"]
+    dias = (
+        pd.date_range(dias_validos.min(), dias_validos.max(), freq="D")
+        .strftime("%Y-%m-%d")
+        .tolist()
+        if not dias_validos.empty
+        else []
+    )
     comentarios["fuente_id"] = comentarios["publicacion_id"].map(
         publicaciones.set_index("publicacion_id")["fuente_id"]
     ).fillna("")
@@ -341,13 +349,23 @@ def exportar(
     for nombre in sorted(narrativas_motor.index.tolist()):
         fila = narrativas_motor.loc[nombre]
         grupo = comentarios[comentarios["_narrativa"] == nombre]
+        comentarios_por_dia = {
+            dia: comentarios_dia
+            for dia, comentarios_dia in grupo[grupo["_dia"] != ""].groupby(
+                "_dia", sort=True
+            )
+        }
         serie = []
-        por_dia = grupo[grupo["_dia"] != ""].groupby("_dia", sort=True)
-        for dia, comentarios_dia in por_dia:
+        for dia in dias:
+            comentarios_dia = comentarios_por_dia.get(dia)
             serie.append({
                 "dia": dia,
-                "total": int(len(comentarios_dia)),
-                "organico": int((~comentarios_dia["_coordinado"]).sum()),
+                "total": int(len(comentarios_dia)) if comentarios_dia is not None else 0,
+                "organico": (
+                    int((~comentarios_dia["_coordinado"]).sum())
+                    if comentarios_dia is not None
+                    else 0
+                ),
             })
         frases = [
             frase
