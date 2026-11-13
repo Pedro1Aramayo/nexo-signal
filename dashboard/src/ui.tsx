@@ -85,12 +85,23 @@ export function Cargando({ texto = 'Cargando…' }: { texto?: string }) {
   )
 }
 
-export function AvisoDemo() {
+export function ErrorCarga({ onRetry }: { onRetry: () => void }) {
+  return (
+    <Tarjeta className="space-y-4 p-8 text-lg">
+      <p>No pudimos cargar los datos. Verificá que se hayan generado con <code className="rounded bg-slate-100 px-1.5 py-0.5">make dashboard-datos</code>.</p>
+      <button onClick={onRetry} className="rounded-xl bg-indigo-700 px-5 py-3 font-semibold text-white hover:bg-indigo-800">
+        Reintentar
+      </button>
+    </Tarjeta>
+  )
+}
+
+export function AvisoDemo({ dataset }: { dataset: string }) {
   return (
     <div className="flex items-start gap-3 rounded-2xl bg-violet-50 px-4 py-3 text-[15px] text-violet-900 ring-1 ring-violet-200">
       <Info className="mt-0.5 h-5 w-5 shrink-0" />
       <p>
-        <b>Modo demostración.</b> Ninguna cuenta de redes sociales está conectada. Las publicaciones son datos sintéticos de práctica de QualyData, asignadas a plataformas para ilustrar; el análisis es el resultado real de NEXO ENGINE.
+        <b>Modo demostración.</b> Ninguna cuenta de redes sociales está conectada. El conjunto mostrado es «{dataset}»; las plataformas se asignaron solo para ilustrar y el análisis es el resultado de NEXO ENGINE.
       </p>
     </div>
   )

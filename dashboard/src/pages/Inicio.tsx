@@ -1,17 +1,17 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, MessageCircle, Heart, ShieldAlert, Sparkles, LayoutGrid, BarChart3, Calendar, Layers, Users, Bell, ChevronRight, PieChart, X as Cerrar } from 'lucide-react'
-import { fecha, num, pct, useNarrativas, usePublicaciones, useResumen } from '../data'
+import { anio, fecha, num, pct, useNarrativas, usePublicaciones, useResumen } from '../data'
 import type { Narrativa, Plataforma, Publicacion } from '../types'
-import { AvisoDemo, Avatar, CATEGORIAS, Cargando, Encabezado, LogoPlataforma, MarcaPlataforma, ORDEN_CATEGORIAS, ORDEN_PLATAFORMAS, PLATAFORMAS, Tarjeta } from '../ui'
+import { AvisoDemo, Avatar, CATEGORIAS, Cargando, Encabezado, ErrorCarga, LogoPlataforma, MarcaPlataforma, ORDEN_CATEGORIAS, ORDEN_PLATAFORMAS, PLATAFORMAS, Tarjeta } from '../ui'
 
 type Orden = 'recientes' | 'comentadas' | 'coordinacion'
 const POR_PAGINA = 20
 
 export default function Inicio() {
-  const { datos: pubs } = usePublicaciones()
-  const { datos: resumen } = useResumen()
-  const { datos: narrs } = useNarrativas()
+  const { data: pubs, error: errorPubs, reintentar: reintentarPubs } = usePublicaciones()
+  const { data: resumen, error: errorResumen, reintentar: reintentarResumen } = useResumen()
+  const { data: narrs, error: errorNarrs, reintentar: reintentarNarrs } = useNarrativas()
   const [plataforma, setPlataforma] = useState<Plataforma | null>(null)
   const [texto, setTexto] = useState('')
   const [orden, setOrden] = useState<Orden>('recientes')
@@ -41,6 +41,24 @@ export default function Inicio() {
   }, [pubs, plataforma, texto, orden, soloCoord, narrativa])
 
   const titulos = useMemo(() => new Map((narrs ?? []).map((n) => [n.narrativa, n.titulo])), [narrs])
+  const anioMin = anio(resumen?.fecha_min ?? '')
+  const anioMax = anio(resumen?.fecha_max ?? '')
+  const rangoAnios = anioMin && anioMax
+    ? anioMin === anioMax ? anioMin : `${anioMin}–${anioMax}`
+    : anioMin || anioMax
+
+  if (errorPubs || errorResumen || errorNarrs) {
+    return (
+      <div className="mx-auto max-w-7xl">
+        <ErrorCarga onRetry={() => {
+          if (errorPubs) reintentarPubs()
+          if (errorResumen) reintentarResumen()
+          if (errorNarrs) reintentarNarrs()
+        }} />
+      </div>
+    )
+  }
+  if (!pubs || !resumen || !narrs) return <Cargando texto="Cargando datos del análisis…" />
 
   return (
     <div className="mx-auto max-w-[1500px] space-y-6">
@@ -51,9 +69,10 @@ export default function Inicio() {
         </label>
         {resumen && (
           <span className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-lg shadow-sm">
-            <Calendar className="h-5 w-5 text-slate-500" /> {fecha(resumen.fecha_min, false)} – {fecha(resumen.fecha_max, false)} 2026
+            <Calendar className="h-5 w-5 text-slate-500" /> {fecha(resumen.fecha_min, false)} – {fecha(resumen.fecha_max, false)} {rangoAnios}
           </span>
         )}
+        <span className="max-w-full rounded-2xl bg-slate-100 px-4 py-3.5 text-sm font-semibold text-slate-700">Datos: {resumen.dataset}</span>
         <span className="rounded-2xl bg-violet-100 px-4 py-3.5 text-base font-semibold text-violet-800">Modo demostración</span>
       </Encabezado>
 
@@ -92,7 +111,6 @@ export default function Inicio() {
               </button>
             )}
             <div className="mt-5 space-y-4">
-              {!pubs && <Cargando texto="Cargando publicaciones…" />}
               {pubs && lista.length === 0 && <p className="p-8 text-center text-lg text-slate-500">No hay publicaciones que coincidan.</p>}
               {lista.slice(0, limite).map((p) => <FilaPublicacion key={p.publicacion_id} p={p} />)}
               {limite < lista.length && (
@@ -108,7 +126,7 @@ export default function Inicio() {
           {resumen && <ResumenAnalisis r={resumen} />}
           {narrs && resumen && <Postura narrs={narrs} />}
           {narrs && <Principales narrs={narrs} activa={narrativa} onElegir={(n) => { setNarrativa(n === narrativa ? null : n); reiniciar() }} />}
-          <AvisoDemo />
+          <AvisoDemo dataset={resumen.dataset} />
         </aside>
       </div>
     </div>
@@ -162,6 +180,7 @@ function FilaPublicacion({ p }: { p: Publicacion }) {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,.4),transparent_60%)]" />
         <LogoPlataforma p={p.plataforma_demo} className="absolute right-3 top-3 h-6 w-6 text-white/80" />
         <div className="absolute inset-x-3 bottom-3">
+          <div className="mb-1 text-[9px] font-medium leading-tight text-white">Clasificación experimental · reglas heurísticas, precisión no medida</div>
           <div className="flex h-2 overflow-hidden rounded-full bg-white/30">
             {ORDEN_CATEGORIAS.map((c) => <div key={c} className={CATEGORIAS[c].punto} style={{ width: `${(100 * (p.categorias[c] ?? 0)) / Math.max(p.comentarios, 1)}%` }} />)}
           </div>

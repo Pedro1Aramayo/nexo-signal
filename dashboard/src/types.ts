@@ -3,6 +3,7 @@ export type Categoria = 'consulta' | 'queja' | 'elogio' | 'sugerencia' | 'otro'
 export type Conteo = Partial<Record<Categoria, number>>
 
 export interface Resumen {
+  conjunto: 'practica' | 'final'
   dataset: string
   comentarios: number
   publicaciones: number

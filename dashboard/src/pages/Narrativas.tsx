@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom'
 import { Layers, ThumbsUp, ThumbsDown, Clock } from 'lucide-react'
 import { fecha, num, pct, useNarrativas } from '../data'
-import { Cargando, Encabezado, Tarjeta } from '../ui'
+import { Cargando, Encabezado, ErrorCarga, Tarjeta } from '../ui'
 import { Serie } from './OrganicLens'
 
 export default function Narrativas() {
-  const { datos } = useNarrativas()
-  if (!datos) return <Cargando />
-  const lista = [...datos].sort((a, b) => b.total - a.total)
+  const { data, error, reintentar } = useNarrativas()
+  if (error) return <ErrorCarga onRetry={reintentar} />
+  if (!data) return <Cargando />
+  const lista = [...data].sort((a, b) => b.total - a.total)
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <Encabezado titulo="Narrativas" sub="Afirmaciones que se repiten con distintas palabras, detectadas automáticamente por NEXO ENGINE." icono={<Layers className="h-7 w-7" />} />

@@ -10,6 +10,9 @@ function cargar<T>(ruta: string): Promise<T> {
       fetch(`${import.meta.env.BASE_URL}data/${ruta}`).then((r) => {
         if (!r.ok) throw new Error(`No se pudo cargar ${ruta}`)
         return r.json()
+      }).catch((error: unknown) => {
+        cache.delete(ruta)
+        throw error
       }),
     )
   }
@@ -17,19 +20,33 @@ function cargar<T>(ruta: string): Promise<T> {
 }
 
 export function useDatos<T>(ruta: string | null) {
-  const [estado, setEstado] = useState<{ ruta: string | null; datos?: T; error?: string }>({ ruta: null })
+  const [estado, setEstado] = useState<{ ruta: string | null; data?: T; error?: string }>({ ruta: null })
+  const [intento, setIntento] = useState(0)
   useEffect(() => {
     if (!ruta) return
     let vivo = true
     cargar<T>(ruta)
-      .then((datos) => vivo && setEstado({ ruta, datos }))
-      .catch((e: Error) => vivo && setEstado({ ruta, error: e.message }))
+      .then((data) => vivo && setEstado({ ruta, data }))
+      .catch((error: unknown) => vivo && setEstado({
+        ruta,
+        error: error instanceof Error ? error.message : 'No se pudieron cargar los datos.',
+      }))
     return () => {
       vivo = false
     }
-  }, [ruta])
+  }, [ruta, intento])
   const actual = estado.ruta === ruta
-  return { datos: actual ? estado.datos : undefined, error: actual ? estado.error : undefined }
+  const reintentar = () => {
+    if (!ruta) return
+    cache.delete(ruta)
+    setEstado({ ruta })
+    setIntento((actual) => actual + 1)
+  }
+  return {
+    data: actual ? estado.data : undefined,
+    error: actual ? estado.error : undefined,
+    reintentar,
+  }
 }
 
 export const useResumen = () => useDatos<Resumen>('resumen.json')
@@ -51,4 +68,14 @@ export function fecha(iso: string, conHora = true) {
     month: 'short',
     ...(conHora ? { hour: '2-digit', minute: '2-digit' } : {}),
   })
+}
+
+export function anio(iso: string) {
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime())
+    ? ''
+    : d.toLocaleString('es-AR', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        year: 'numeric',
+      })
 }

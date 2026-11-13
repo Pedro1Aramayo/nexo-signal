@@ -11,6 +11,10 @@ import pandas as pd
 
 PLATAFORMAS_DEMO = ("instagram", "facebook", "x", "youtube", "tiktok")
 CATEGORIAS = ("sugerencia", "queja", "consulta", "elogio", "otro")
+NOMBRES_DATASET = {
+    "practica": "Set de práctica QualyData (sintético)",
+    "final": "Set final QualyData (sintético)",
+}
 SUGERENCIA_FUERTE = (
     "por que no", "deberian", "deberia", "habria que", "propongo", "sugiero",
     "tendrian que", "estaria bueno",
@@ -185,7 +189,12 @@ def _comentario_exportable(fila: dict) -> dict:
     }
 
 
-def exportar(datos: Path, entrega: Path, salida: Path) -> None:
+def exportar(
+    datos: Path,
+    entrega: Path,
+    salida: Path,
+    conjunto: str = "practica",
+) -> None:
     fuentes = _leer_tabla(datos, "fuentes.csv").drop_duplicates(
         "fuente_id", keep="first"
     )
@@ -427,7 +436,8 @@ def exportar(datos: Path, entrega: Path, salida: Path) -> None:
         ].tolist()
     )
     resumen = {
-        "dataset": "práctica QualyData (sintético)",
+        "conjunto": conjunto,
+        "dataset": NOMBRES_DATASET[conjunto],
         "comentarios": int(len(comentarios)),
         "publicaciones": int(len(publicaciones)),
         "fuentes": int(len(fuentes)),
@@ -473,13 +483,27 @@ def exportar(datos: Path, entrega: Path, salida: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--datos", type=Path, default=Path("datos/practica"))
-    parser.add_argument("--entrega", type=Path, default=Path("salida/practica_nexo"))
+    parser.add_argument(
+        "--conjunto",
+        choices=("practica", "final"),
+        default="practica",
+    )
+    parser.add_argument("--datos", type=Path)
+    parser.add_argument("--entrega", type=Path)
     parser.add_argument(
         "--salida", type=Path, default=Path("dashboard/public/data")
     )
     argumentos = parser.parse_args()
-    exportar(argumentos.datos, argumentos.entrega, argumentos.salida)
+    datos_default, entrega_default = {
+        "practica": (Path("datos/practica"), Path("salida/practica_nexo")),
+        "final": (Path("datos/final"), Path("entrega")),
+    }[argumentos.conjunto]
+    exportar(
+        argumentos.datos or datos_default,
+        argumentos.entrega or entrega_default,
+        argumentos.salida,
+        argumentos.conjunto,
+    )
 
 
 if __name__ == "__main__":

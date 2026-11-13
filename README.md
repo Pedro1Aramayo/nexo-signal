@@ -57,15 +57,23 @@ cuatro archivos oficiales; las mediciones y demás evidencia se guardan en `entr
 
 ## Dashboard (Fase 3, en desarrollo)
 
-Requiere Node.js 20. La demo usa `datos/practica` y la salida de práctica generada con `make nexo`;
-no hay cuentas conectadas. Para preparar los datos y arrancar Vite:
+Requiere Node.js 20. Por defecto usa `datos/practica` y `salida/practica_nexo`. Para cambiar el
+conjunto de datos (el modo final lee `datos/final` y `entrega`) y arrancar Vite:
 
 ```bash
-make dashboard-datos && make dashboard
+make dashboard-datos CONJUNTO=practica # o CONJUNTO=final
+make dashboard
 ```
 
 Luego abre [http://localhost:5173](http://localhost:5173). El plan de integraciones futuras está en
 [`docs/INTEGRACIONES.md`](docs/INTEGRACIONES.md).
+
+### Qué es real y qué es demostración
+
+- El motor y los resultados son reales y se ejecutan sobre datos sintéticos de QualyData.
+- Las plataformas sociales se asignan solo para demostrar la interfaz; no hay cuentas conectadas.
+- NEXO CONNECT y la autorización OAuth no están implementados (ver [`docs/INTEGRACIONES.md`](docs/INTEGRACIONES.md)).
+- La clasificación por categorías es experimental: reglas heurísticas, precisión no medida.
 
 ## Qué existía antes del evento y qué hicimos nosotros
 

@@ -141,9 +141,11 @@ def test_exporta_jsons_y_comentarios_por_publicacion(tmp_path):
         entrega / "evidencia" / "grupos_coordinados.csv",
     )
 
-    exportar(datos, entrega, salida)
+    exportar(datos, entrega, salida, conjunto="final")
 
     resumen = json.loads((salida / "resumen.json").read_text(encoding="utf-8"))
+    assert resumen["conjunto"] == "final"
+    assert resumen["dataset"] == "Set final QualyData (sintético)"
     assert resumen["comentarios"] == 2
     assert resumen["publicaciones"] == 1
     assert resumen["fuentes"] == 1

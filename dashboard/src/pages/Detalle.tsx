@@ -1,17 +1,18 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Heart, MessageCircle, CornerDownRight, ShieldAlert, Leaf, ThumbsUp, ThumbsDown, Network } from 'lucide-react'
-import { fecha, num, pct, useComentarios, useNarrativas, usePublicaciones } from '../data'
+import { fecha, num, pct, useComentarios, useNarrativas, usePublicaciones, useResumen } from '../data'
 import type { Categoria, Comentario } from '../types'
-import { AvisoDemo, Avatar, CATEGORIAS, Cargando, LogoPlataforma, ORDEN_CATEGORIAS, PLATAFORMAS, Tarjeta } from '../ui'
+import { AvisoDemo, Avatar, CATEGORIAS, Cargando, ErrorCarga, LogoPlataforma, ORDEN_CATEGORIAS, PLATAFORMAS, Tarjeta } from '../ui'
 
 const POR_PAGINA = 30
 
 export default function Detalle() {
   const { id } = useParams()
-  const { datos: pubs } = usePublicaciones()
-  const { datos: narrs } = useNarrativas()
-  const { datos: comentarios, error } = useComentarios(id)
+  const { data: pubs, error: errorPubs, reintentar: reintentarPubs } = usePublicaciones()
+  const { data: narrs, error: errorNarrs, reintentar: reintentarNarrs } = useNarrativas()
+  const { data: comentarios, error: errorComentarios, reintentar: reintentarComentarios } = useComentarios(id)
+  const { data: resumenDataset, error: errorResumen, reintentar: reintentarResumen } = useResumen()
   const [categoria, setCategoria] = useState<Categoria | null>(null)
   const [narrativa, setNarrativa] = useState<string | null>(null)
   const [soloCoord, setSoloCoord] = useState(false)
@@ -49,8 +50,21 @@ export default function Detalle() {
     [comentarios, categoria, narrativa, soloCoord],
   )
 
-  if (error) return <Tarjeta className="p-10 text-lg">No encontramos esta publicación. <Link className="font-semibold text-violet-700" to="/">Volver al inicio</Link></Tarjeta>
-  if (!pub || !comentarios) return <Cargando texto="Analizando publicación…" />
+  if (errorPubs) {
+    return <ErrorCarga onRetry={reintentarPubs} />
+  }
+  if (!pubs) return <Cargando texto="Analizando publicación…" />
+  if (!pub) return <Tarjeta className="p-10 text-lg">No encontramos esta publicación. <Link className="font-semibold text-violet-700" to="/">Volver al inicio</Link></Tarjeta>
+  if (errorNarrs || errorComentarios || errorResumen) {
+    return (
+      <ErrorCarga onRetry={() => {
+        if (errorNarrs) reintentarNarrs()
+        if (errorComentarios) reintentarComentarios()
+        if (errorResumen) reintentarResumen()
+      }} />
+    )
+  }
+  if (!comentarios || !narrs || !resumenDataset) return <Cargando texto="Analizando publicación…" />
 
   const plat = PLATAFORMAS[pub.plataforma_demo]
   const total = comentarios.length
@@ -93,6 +107,7 @@ export default function Detalle() {
               <BotonCategoria key={c} activo={categoria === c} onClick={() => { setCategoria(categoria === c ? null : c); reiniciar() }} titulo={CATEGORIAS[c].nombre} n={resumen.cat[c] ?? 0} total={total} punto={CATEGORIAS[c].punto} />
             ))}
           </section>
+          <p className="text-sm text-slate-500">Clasificación experimental · reglas heurísticas, precisión no medida</p>
 
           <div className="flex flex-wrap items-center gap-2">
             {narrativa && (
@@ -154,7 +169,7 @@ export default function Detalle() {
             <p className="mt-1 text-slate-500">Conversación total versus conversación sin cuentas coordinadas.</p>
             <div className="mt-4 space-y-3">
               <Barra texto="Total" n={total} max={total} color="bg-slate-400" />
-              <Barra texto="Orgánica" n={total - resumen.coord} max={total} color="bg-emerald-500" />
+              <Barra texto="Actividad sin coordinación detectada" n={total - resumen.coord} max={total} color="bg-emerald-500" />
             </div>
             <p className="mt-4 text-[15px] text-slate-600">
               {resumen.coord > 0 ? <>El <b>{pct(resumen.coord, total)}</b> de los comentarios proviene de operaciones coordinadas ({resumen.grupos.join(', ')}).</> : <>No se detectaron cuentas coordinadas en esta publicación.</>}
@@ -164,7 +179,7 @@ export default function Detalle() {
               <Link to="/organic-lens" className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-lg font-semibold text-emerald-800 ring-1 ring-emerald-200 hover:bg-emerald-100"><Leaf className="h-5 w-5" /> Abrir Organic Lens</Link>
             </div>
           </Tarjeta>
-          <AvisoDemo />
+          <AvisoDemo dataset={resumenDataset.dataset} />
         </aside>
       </div>
     </div>

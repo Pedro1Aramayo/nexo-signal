@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Network, Users, Moon, CalendarClock, Quote } from 'lucide-react'
 import { num, useGrupos, useNarrativas } from '../data'
-import { Avatar, Cargando, Encabezado, Tarjeta } from '../ui'
+import { Avatar, Cargando, Encabezado, ErrorCarga, Tarjeta } from '../ui'
 
 const CANAL: Record<string, string> = {
   T: 'Actividad sincronizada: comentan las mismas publicaciones o repiten textos con minutos de diferencia',
@@ -9,15 +9,21 @@ const CANAL: Record<string, string> = {
 }
 
 export default function Coordinacion() {
-  const { datos } = useGrupos()
-  const { datos: narrs } = useNarrativas()
-  if (!datos) return <Cargando />
-  const titulos = new Map((narrs ?? []).map((n) => [n.narrativa, n.titulo]))
+  const { data, error, reintentar } = useGrupos()
+  const { data: narrs, error: errorNarrs, reintentar: reintentarNarrs } = useNarrativas()
+  if (error || errorNarrs) {
+    return <ErrorCarga onRetry={() => {
+      if (error) reintentar()
+      if (errorNarrs) reintentarNarrs()
+    }} />
+  }
+  if (!data || !narrs) return <Cargando />
+  const titulos = new Map(narrs.map((n) => [n.narrativa, n.titulo]))
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <Encabezado titulo="Coordinación" sub="Grupos de cuentas que actúan juntas de forma repetida, más allá de lo esperable por azar o viralidad." icono={<Network className="h-7 w-7" />} />
-      {datos.length === 0 && <Tarjeta className="p-10 text-lg">No se detectaron operaciones coordinadas.</Tarjeta>}
-      {datos.map((g) => (
+      {data.length === 0 && <Tarjeta className="p-10 text-lg">No se detectaron operaciones coordinadas.</Tarjeta>}
+      {data.map((g) => (
         <Tarjeta key={g.grupo} className="space-y-5 p-6">
           <div className="flex flex-wrap items-center gap-3">
             <span className="rounded-2xl bg-rose-600 px-4 py-2 text-xl font-bold text-white">Operación {g.grupo}</span>
