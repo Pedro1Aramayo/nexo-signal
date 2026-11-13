@@ -68,3 +68,26 @@ NEXO SIGNAL lee cientos de miles de comentarios en aproximadamente 65 segundos, 
 - **¿Ajustaron a mano al set de práctica?** No. No hay reglas por tema ni cantidades fijas. Cada tema se validó por separado y la verdad solo se lee en `reporte/diagnostico.py`.
 - **¿Es reproducible?** Sí: hay semillas y una revisión del modelo fijadas, y se corrió dos veces desde clones limpios con salida idéntica.
 - **¿Cómo distinguen viralidad de coordinación?** La viralidad genuina junta muchas cuentas una sola vez. La coordinación repite coincidencias entre las mismas cuentas, en varias publicaciones, muy por encima del modelo nulo.
+
+## Guion de demostración (2–3 minutos)
+
+Grabar con el dashboard corriendo sobre el **set final**:
+
+```bash
+make dashboard-datos CONJUNTO=final
+make dashboard
+```
+
+| Tiempo | Pantalla | Qué decir |
+|---|---|---|
+| 0:00–0:20 | Inicio | «NEXO SIGNAL analizó 150.000 comentarios del set final de QualyData en 372 publicaciones y 8 fuentes, con un solo comando y sin servicios de IA pagos: 65 segundos de CPU y USD 0.» Señalar el resumen de la derecha: 150.000 comentarios, 12 narrativas, 94 cuentas coordinadas, 3 operaciones. |
+| 0:20–0:40 | Inicio · filtros | Tocar Instagram, TikTok y X. «Las plataformas son una demostración de la interfaz: los datos son sintéticos y ninguna cuenta está conectada.» Usar el buscador y el orden por «más comentadas». |
+| 0:40–1:10 | Publicación | «Analizar publicación» en una publicación con coordinación. Mostrar los comentarios reales y los botones de categoría: consultas, quejas, elogios, sugerencias y otros. «Esta clasificación comercial es experimental: reglas heurísticas, precisión no medida.» Filtrar por quejas. |
+| 1:10–1:35 | Publicación · narrativas | Mostrar las narrativas detectadas con su barra de apoyo y rechazo. «Las narrativas no están definidas de antemano: el motor las descubre y después clasifica la postura de cada comentario.» Tocar una narrativa para filtrar sus comentarios. |
+| 1:35–2:00 | Organic Lens | Elegir una narrativa. «Organic Lens separa la actividad total de la actividad sin coordinación detectada, día por día. Excluir la coordinación detectada no garantiza que el resto sea genuino: solo descuenta las cuentas que el motor marcó.» |
+| 2:00–2:35 | Coordinación · G3 | Bajar hasta la operación G3. «21 cuentas, 84 comentarios en 6 publicaciones, 100% de actividad nocturna y cuentas creadas 5 días antes de comentar. Los mensajes más repetidos piden compartir el cierre de la comisaría, y el motor asignó el 100% de esos comentarios a la narrativa correspondiente: coordinación, no viralidad.» |
+| 2:35–3:00 | Cierre | «En el set de práctica, con el evaluador oficial, NEXO ENGINE saca 51.65 sobre 55, contra 21.96 de la línea base: agrupamiento 0.97, ruido 0.96 y postura 0.99 de F1. Lo implementado es el motor y este dashboard. Lo que sigue es NEXO CONNECT: conectar cuentas reales con OAuth oficial, todavía no implementado.» |
+
+**Implementado hoy:** descubrimiento de narrativas, postura, ruido, fecha de origen, detección de operaciones coordinadas, Organic Lens, dashboard navegable y entrega reproducible con un comando.
+
+**Todavía no implementado:** NEXO CONNECT y la autorización OAuth con las APIs oficiales (plan en [`INTEGRACIONES.md`](INTEGRACIONES.md)); la clasificación por categorías es experimental; ver «Limitaciones conocidas» en el README (operación G1).
