@@ -55,7 +55,7 @@ Hugging Face, usando la revisión fijada del modelo. `datos/final/` se descarga 
 `set-final` y no está incluido en el repositorio. La carpeta `entrega/` conserva en su raíz solo los
 cuatro archivos oficiales; las mediciones y demás evidencia se guardan en `entrega/evidencia/`.
 
-## Dashboard (Fase 3, en desarrollo)
+## Dashboard NEXO SIGNAL
 
 Requiere Node.js 20. Por defecto usa `datos/practica` y `salida/practica_nexo`. Para cambiar el
 conjunto de datos (el modo final lee `datos/final` y `entrega`) y arrancar Vite:
@@ -64,6 +64,15 @@ conjunto de datos (el modo final lee `datos/final` y `entrega`) y arrancar Vite:
 make dashboard-datos CONJUNTO=practica # o CONJUNTO=final
 make dashboard
 ```
+
+### Probar la demo con el set final
+
+1. `make setup && make descargar-final` (descarga el set final a `datos/final/`, no incluido en el repo)
+2. `make entrega` (genera `entrega/` con los cuatro archivos oficiales) — o usar los ya commiteados
+3. `make dashboard-datos CONJUNTO=final` (exporta los JSON del dashboard desde `datos/final` y `entrega`, sin modificar `entrega/`)
+4. `make dashboard` y abrir http://localhost:5173
+
+El dashboard muestra arriba «Datos: Set final QualyData (sintético)» para que quede claro qué conjunto está cargado.
 
 Luego abre [http://localhost:5173](http://localhost:5173). El plan de integraciones futuras está en
 [`docs/INTEGRACIONES.md`](docs/INTEGRACIONES.md).
