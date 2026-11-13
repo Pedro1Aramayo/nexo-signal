@@ -141,11 +141,11 @@ def _escribir_json(ruta: Path, contenido) -> None:
     )
 
 
-def _top_narrativas(frame: pd.DataFrame, titulos: dict[str, str], limite: int):
+def _top_narrativas(frame: pd.DataFrame, titulos: dict[str, str]):
     narrativas = frame[frame["_narrativa"] != "ninguna"]
     conteos = Counter(narrativas["_narrativa"].tolist())
     resultado = []
-    for nombre, cantidad in _ordenar_conteos(conteos, limite):
+    for nombre, cantidad in _ordenar_conteos(conteos, len(conteos)):
         grupo = narrativas[narrativas["_narrativa"] == nombre]
         resultado.append({
             "narrativa": nombre,
@@ -334,7 +334,7 @@ def exportar(
             "ruido": int((grupo["_narrativa"] == "ninguna").sum()),
             "me_gusta_total": int(grupo["_me_gusta"].sum()),
             "categorias": _conteo_categorias(grupo),
-            "narrativas": _top_narrativas(grupo, titulos, 5),
+            "narrativas": _top_narrativas(grupo, titulos),
         })
 
     narrativas_json = []

@@ -84,6 +84,17 @@ def test_exporta_jsons_y_comentarios_por_publicacion(tmp_path):
                 "respuesta_a": "",
                 "me_gusta": "99",
             },
+        ] + [
+            {
+                "comentario_id": f"c{i}",
+                "publicacion_id": "p1",
+                "cuenta_id": "u2",
+                "fecha": f"2026-09-07T08:{i + 2:02d}:00-03:00",
+                "texto": "Texto neutral",
+                "respuesta_a": "",
+                "me_gusta": "0",
+            }
+            for i in range(3, 9)
         ]),
         datos / "comentarios.csv.gz",
     )
@@ -111,6 +122,13 @@ def test_exporta_jsons_y_comentarios_por_publicacion(tmp_path):
         pd.DataFrame([
             {"comentario_id": "c1", "narrativa": "n01", "postura": "apoya"},
             {"comentario_id": "c2", "narrativa": "", "postura": ""},
+        ] + [
+            {
+                "comentario_id": f"c{i}",
+                "narrativa": f"n{i - 1:02d}",
+                "postura": "apoya",
+            }
+            for i in range(3, 9)
         ]),
         entrega / "comentarios.csv",
     )
@@ -120,7 +138,15 @@ def test_exporta_jsons_y_comentarios_por_publicacion(tmp_path):
             "titulo": "Narrativa de prueba",
             "frases_clave": "agua|camino",
             "fecha_origen": "2026-09-07T08:01:00-03:00",
-        }]),
+        }] + [
+            {
+                "narrativa": f"n{i:02d}",
+                "titulo": f"Narrativa {i}",
+                "frases_clave": "agua|camino",
+                "fecha_origen": "2026-09-07T08:01:00-03:00",
+            }
+            for i in range(2, 8)
+        ]),
         entrega / "narrativas.csv",
     )
     _guardar_tabla(
@@ -155,11 +181,11 @@ def test_exporta_jsons_y_comentarios_por_publicacion(tmp_path):
     resumen = json.loads((salida / "resumen.json").read_text(encoding="utf-8"))
     assert resumen["conjunto"] == "final"
     assert resumen["dataset"] == "Set final QualyData (sintético)"
-    assert resumen["comentarios"] == 2
+    assert resumen["comentarios"] == 8
     assert resumen["publicaciones"] == 1
     assert resumen["fuentes"] == 1
     assert resumen["cuentas"] == 2
-    assert resumen["narrativas"] == 1
+    assert resumen["narrativas"] == 7
     assert resumen["grupos_coordinados"] == 1
     assert resumen["cuentas_coordinadas"] == 1
     assert resumen["categorias"] == {
@@ -167,28 +193,25 @@ def test_exporta_jsons_y_comentarios_por_publicacion(tmp_path):
         "queja": 0,
         "consulta": 0,
         "elogio": 0,
-        "otro": 1,
+        "otro": 7,
     }
 
     fuente = json.loads((salida / "fuentes.json").read_text(encoding="utf-8"))[0]
     assert fuente["plataforma_demo"] == "instagram"
     assert fuente["publicaciones"] == 1
-    assert fuente["comentarios"] == 2
+    assert fuente["comentarios"] == 8
 
     publicacion = json.loads(
         (salida / "publicaciones.json").read_text(encoding="utf-8")
     )[0]
-    assert publicacion["comentarios"] == 2
+    assert publicacion["comentarios"] == 8
     assert publicacion["coordinados"] == 1
     assert publicacion["ruido"] == 1
     assert publicacion["me_gusta_total"] == 4
-    assert publicacion["narrativas"] == [{
-        "narrativa": "n01",
-        "titulo": "Narrativa de prueba",
-        "n": 1,
-        "apoya": 1,
-        "rechaza": 0,
-    }]
+    assert [n["narrativa"] for n in publicacion["narrativas"]] == [
+        f"n{i:02d}" for i in range(1, 8)
+    ]
+    assert all(n["n"] == 1 for n in publicacion["narrativas"])
 
     narrativa = json.loads(
         (salida / "narrativas.json").read_text(encoding="utf-8")
@@ -213,7 +236,9 @@ def test_exporta_jsons_y_comentarios_por_publicacion(tmp_path):
     comentarios = json.loads(
         (salida / "comentarios" / "p1.json").read_text(encoding="utf-8")
     )
-    assert [comentario["id"] for comentario in comentarios] == ["c1", "c2"]
+    assert [comentario["id"] for comentario in comentarios] == [
+        f"c{i}" for i in range(1, 9)
+    ]
     assert comentarios[0]["categoria"] == "sugerencia"
     assert comentarios[0]["grupo"] == "G1"
     assert comentarios[1]["narrativa"] is None
